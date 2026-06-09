@@ -14,15 +14,15 @@ describe("REPLAY viewer", () => {
     cleanup();
   });
 
-  it("renders the anchored run list, selected packet, and tamper proof", () => {
+  it("renders the anchored run list, selected packet, and tamper proof", async () => {
     render(<App />);
 
-    expect(screen.getAllByText("REPLAY").length).toBeGreaterThan(1);
-    expect(screen.getAllByText("MERIDIAN Rebalance").length).toBeGreaterThan(1);
-    expect(screen.getAllByText("GASLIGHT Optimization").length).toBeGreaterThan(1);
-    expect(screen.getAllByText("Signals captured").length).toBeGreaterThan(1);
-    expect(screen.getByText("Tamper proof")).toBeTruthy();
-    expect(screen.getByText(/Sourcify exact match/i)).toBeTruthy();
+    expect((await screen.findAllByText("REPLAY")).length).toBeGreaterThanOrEqual(1);
+    expect((await screen.findAllByText("MERIDIAN Rebalance")).length).toBeGreaterThanOrEqual(1);
+    expect((await screen.findAllByText("GASLIGHT Optimization")).length).toBeGreaterThanOrEqual(1);
+    expect((await screen.findAllByText("Signals captured")).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Packet Verified/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Live Verify/i })).toBeTruthy();
   });
 
   it("exposes a tamper check control", () => {

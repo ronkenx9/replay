@@ -169,13 +169,6 @@ export function createEvmBackend(options: EvmBackendOptions): Backend {
         verifyUrl: txUrl(publicClient, receipt.transactionHash),
       };
 
-      try {
-        const receiptPath = join(packetDir, `${contentHash}.receipt.json`);
-        await writeFile(receiptPath, JSON.stringify(anchorResult, null, 2), "utf8");
-      } catch (err) {
-        // ignore write failures
-      }
-
       return anchorResult;
     },
 
@@ -189,6 +182,13 @@ export function createEvmBackend(options: EvmBackendOptions): Backend {
       });
 
       return { contentHash: unprefixed(contentHash) };
+    },
+
+    // Persist the FULL StepReceipt so on-disk artifacts remain consumable by
+    // core verifyStep/recallRun after restart (fixes slim-receipt drift).
+    async saveReceipt(receipt) {
+      const receiptPath = join(packetDir, `${receipt.contentHash}.receipt.json`);
+      await writeFile(receiptPath, JSON.stringify(receipt, null, 2), "utf8");
     },
   };
 }

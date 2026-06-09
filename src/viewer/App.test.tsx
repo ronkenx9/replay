@@ -1,9 +1,16 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App.js";
 
 describe("REPLAY viewer", () => {
+  beforeEach(() => {
+    // Hermetic: never let the test hit a live local API server (port 4174).
+    // The component's offline fallback (static runs) is the unit under test.
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline test")));
+  });
+
   afterEach(() => {
+    vi.unstubAllGlobals();
     cleanup();
   });
 

@@ -90,6 +90,11 @@ export interface Backend {
   }): Promise<{ anchorRef: string; txHash: string; verifyUrl: string }>;
   /** Read the anchored hash back. Throw if missing/unreachable. */
   readAnchor(anchorRef: string): Promise<{ contentHash: string }>;
+  /**
+   * Optionally persist the FULL StepReceipt (not just the anchor result) so
+   * persisted artifacts stay consumable by verifyStep/recallRun after restart.
+   */
+  saveReceipt?(receipt: StepReceipt): Promise<void>;
 }
 
 function canonicalize(step: AgentStep, atMs: number): string {
@@ -118,7 +123,7 @@ export async function recordStep(step: AgentStep, backend: Backend): Promise<Ste
     agentId: step.agentId,
   });
 
-  return {
+  const receipt: StepReceipt = {
     runId: step.runId,
     agentId: step.agentId,
     stepIndex: step.stepIndex,
@@ -131,6 +136,8 @@ export async function recordStep(step: AgentStep, backend: Backend): Promise<Ste
     verifyUrl: anchored.verifyUrl,
     atMs,
   };
+  await backend.saveReceipt?.(receipt);
+  return receipt;
 }
 
 /**

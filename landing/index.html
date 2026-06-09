@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>REPLAY — The black box for on-chain AI agents</title>
+<meta name="description" content="REPLAY records every prompt, tool call, decision, and transaction your on-chain AI agent makes — then lets you scrub, verify, and fork the timeline. Anchored on Mantle." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#050505; --surface:#0E0E10; --border:#1E1E22;
+    --t1:#F5F2EA; --t2:#8A8A8A; --t3:#5A5A60;
+    --rec:#FF5A1F;          /* recorder orange — the accent, spent carefully */
+    --proof:#36D17D;        /* verified — rare */
+    --fork:#3B82F6;         /* alternate timeline — rarer */
+    --err:#FF3B30;          /* mismatch — once */
+    --head:"Space Grotesk",sans-serif; --body:"Inter",sans-serif; --mono:"JetBrains Mono",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--t2);font-family:var(--body);font-size:16.5px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  ::selection{background:var(--rec);color:#050505}
+  img{max-width:100%;display:block}
+  a{color:inherit}
+  .wrap{max-width:72rem;margin:0 auto;padding:0 1.5rem}
+  section{padding:7rem 0;border-top:1px solid var(--border)}
+  h1,h2{font-family:var(--head);color:var(--t1);letter-spacing:-.025em;line-height:1.04;font-weight:700}
+  h2{font-size:clamp(1.9rem,4.2vw,3rem);margin-bottom:1.3rem}
+  .eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--t3);margin-bottom:1.5rem}
+  .eyebrow b{color:var(--rec);font-weight:500}
+  .lede{font-size:1.1rem;max-width:37rem}
+  .mono{font-family:var(--mono)}
+
+  /* nav */
+  nav{position:fixed;top:0;left:0;right:0;z-index:40;background:rgba(5,5,5,.78);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{font-family:var(--head);font-weight:700;font-size:1rem;letter-spacing:.14em;color:var(--t1);text-decoration:none;display:flex;align-items:center;gap:.65rem}
+  .logo i{width:9px;height:9px;background:var(--rec);display:inline-block;animation:blink 1.8s steps(1) infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  nav ul{display:flex;gap:2.2rem;list-style:none}
+  nav ul a{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);text-decoration:none;transition:color .25s}
+  nav ul a:hover{color:var(--t1)}
+  .btn{display:inline-block;font-family:var(--mono);font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;padding:.85rem 1.6rem;border:1px solid var(--t1);color:var(--t1);background:transparent;text-decoration:none;cursor:pointer;transition:transform .18s ease,background .25s,color .25s,border-color .25s}
+  .btn:hover{transform:scale(.95);background:var(--rec);border-color:var(--rec);color:#050505}
+  .btn:active{transform:scale(.90)}
+  .btn.solid{background:var(--t1);color:#050505}
+  .btn.solid:hover{background:var(--rec)}
+  nav .btn{padding:.5rem 1rem;font-size:.66rem}
+
+  /* hero */
+  header{padding:11rem 0 0}
+  header .eyebrow{display:flex;align-items:center;gap:.6rem}
+  header .eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--rec);animation:blink 1.6s steps(1) infinite}
+  h1{font-size:clamp(2.7rem,6.6vw,5rem);max-width:17ch;margin-bottom:1.8rem}
+  h1 .w{color:var(--rec)}
+  header .lede{margin-bottom:2.6rem}
+  .cta{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:5.5rem}
+
+  /* the drawn timeline — hero visual */
+  .rail-zone{border-top:1px solid var(--border);background:var(--surface);padding:3.4rem 0 2.6rem;overflow:hidden}
+  .rail-meta{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2.6rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);flex-wrap:wrap;gap:.5rem}
+  .rail-meta b{color:var(--t2);font-weight:500}
+  .rail-meta .v{color:var(--proof)}
+  .rail{position:relative;height:140px}
+  .rail .line{position:absolute;left:0;right:0;top:34px;height:1px;background:var(--border)}
+  .rail .line .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--rec);animation:sweep 9s linear infinite}
+  @keyframes sweep{0%{width:0}88%{width:100%}100%{width:100%}}
+  .rail .head{position:absolute;top:23px;left:0;width:1px;height:23px;background:var(--rec);animation:headmove 9s linear infinite}
+  .rail .head::after{content:"";position:absolute;top:-7px;left:-4.5px;width:10px;height:7px;background:var(--rec);clip-path:polygon(0 0,100% 0,50% 100%)}
+  @keyframes headmove{0%{left:0}88%{left:100%}100%{left:100%}}
+  .stops{position:absolute;inset:0;display:flex;justify-content:space-between}
+  .stop{position:relative;flex:1;min-width:0}
+  .stop .pt{position:absolute;top:30px;left:0;width:9px;height:9px;background:var(--bg);border:1px solid var(--t3);transform:rotate(45deg);transition:border-color .3s, background .3s}
+  .stop .lbl{position:absolute;top:58px;left:0;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);white-space:nowrap}
+  .stop .seq{position:absolute;top:0;left:0;font-family:var(--mono);font-size:.6rem;color:var(--t3)}
+  .stop .tick{position:absolute;top:78px;left:0;font-family:var(--mono);font-size:.6rem;color:var(--proof);opacity:0;transition:opacity .3s}
+  .stop.lit .pt{border-color:var(--rec);background:var(--rec)}
+  .stop.lit .tick{opacity:1}
+  .stop.sel .lbl{color:var(--t1)}
+  .stop.sel .pt{box-shadow:0 0 0 5px rgba(255,90,31,.18)}
+  .stop:last-child .pt{border-color:var(--t3)}
+  .stop.anchor .pt{border-radius:0;background:var(--bg);border:1px solid var(--proof)}
+  .stop.anchor.lit .pt{background:var(--proof);border-color:var(--proof)}
+  .stop:last-child .lbl,.stop:last-child .tick,.stop:last-child .seq{left:auto;right:0;text-align:right}
+  .stop:last-child .pt{left:auto;right:0}
+
+  /* problem — stacked statements, not a grid */
+  .stack{margin-top:3.5rem;border-top:1px solid var(--border)}
+  .stack .item{display:grid;grid-template-columns:5rem 1fr 2fr;gap:2rem;padding:2.2rem 0;border-bottom:1px solid var(--border);align-items:baseline}
+  .stack .item .n{font-family:var(--mono);font-size:.7rem;color:var(--t3);letter-spacing:.15em}
+  .stack .item h3{font-family:var(--head);color:var(--t1);font-size:1.25rem;font-weight:700;letter-spacing:-.01em}
+  .stack .item p{font-size:.95rem;color:var(--t2)}
+
+  /* the loop — four verbs */
+  .loop{margin-top:3.5rem;display:grid;grid-template-columns:repeat(4,1fr)}
+  .verb{border-left:1px solid var(--border);padding:0 1.8rem 0 1.6rem}
+  .verb:first-child{border-left:0;padding-left:0}
+  .verb .word{font-family:var(--head);font-weight:700;font-size:clamp(1.4rem,2.6vw,2rem);color:var(--t1);letter-spacing:-.01em;display:block;margin-bottom:.8rem}
+  .verb .word::after{content:".";color:var(--rec)}
+  .verb p{font-size:.88rem;color:var(--t2)}
+
+  /* evidence packet — drawn artifact */
+  .packet-zone{display:grid;grid-template-columns:1fr 1.1fr;gap:5rem;align-items:center}
+  .packet{background:var(--surface);border:1px solid var(--border);font-family:var(--mono);font-size:.74rem;position:relative}
+  .packet::before{content:"EVIDENCE PACKET · SEQ 002";position:absolute;top:-1px;left:-1px;background:var(--rec);color:#050505;font-size:.6rem;letter-spacing:.16em;padding:.32rem .7rem}
+  .packet table{width:100%;border-collapse:collapse;margin-top:2.1rem}
+  .packet td{padding:.72rem 1.3rem;border-top:1px solid var(--border);vertical-align:top}
+  .packet td:first-child{color:var(--t3);width:34%;letter-spacing:.08em;text-transform:uppercase;font-size:.62rem;padding-top:.85rem}
+  .packet td:last-child{color:var(--t1);word-break:break-all}
+  .packet .ok{color:var(--proof)}
+  .packet .dim{color:var(--t2)}
+  .packet tfoot td{border-top:1px solid var(--border);background:rgba(54,209,125,.05);color:var(--proof);font-size:.66rem;letter-spacing:.1em}
+
+  /* verify states */
+  .states{margin-top:3.2rem;display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)}
+  .state{background:var(--bg);padding:2rem 2.2rem}
+  .state .tag{font-family:var(--mono);font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;display:inline-block;margin-bottom:1rem;padding:.3rem .7rem;border:1px solid}
+  .state.good .tag{color:var(--proof);border-color:rgba(54,209,125,.4)}
+  .state.bad .tag{color:var(--err);border-color:rgba(255,59,48,.4)}
+  .state p{font-size:.92rem}
+  .state p b{color:var(--t1);font-weight:500}
+  .state .hashline{font-family:var(--mono);font-size:.66rem;margin-top:1rem;word-break:break-all}
+  .state.good .hashline{color:var(--proof)}
+  .state.bad .hashline{color:var(--err);text-decoration:line-through;text-decoration-thickness:1px}
+
+  /* black box band */
+  .band{border-top:1px solid var(--border);position:relative;padding:0}
+  .band img{width:100%;height:62vh;object-fit:cover;opacity:.9}
+  .band .copy{position:absolute;inset:0;display:flex;align-items:flex-end}
+  .band .copy .wrap{padding-bottom:3.4rem}
+  .band h2{max-width:18ch;margin-bottom:.8rem;text-shadow:0 2px 30px rgba(0,0,0,.8)}
+  .band p{max-width:34rem;color:var(--t1);opacity:.85;text-shadow:0 1px 20px rgba(0,0,0,.8)}
+
+  /* fork — two drawn paths */
+  .forkviz{margin-top:3.4rem;position:relative;height:150px}
+  .forkviz .base{position:absolute;left:0;top:50px;width:46%;height:1px;background:var(--rec)}
+  .forkviz .orig{position:absolute;left:46%;top:50px;width:54%;height:1px;background:var(--rec)}
+  .forkviz .alt{position:absolute;left:46%;top:50px;width:54%;height:1px;background:var(--fork);transform-origin:left center;transform:rotate(14deg)}
+  .forkviz .node{position:absolute;top:46px;width:9px;height:9px;transform:rotate(45deg)}
+  .forkviz .n1{left:calc(46% - 4px);background:var(--rec);box-shadow:0 0 0 5px rgba(255,90,31,.16)}
+  .forkviz .end-o{position:absolute;right:0;top:34px;font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;color:var(--rec);text-transform:uppercase}
+  .forkviz .end-f{position:absolute;right:0;top:96px;font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;color:var(--fork);text-transform:uppercase}
+  .forkviz .at{position:absolute;left:46%;top:80px;transform:translateX(-50%);font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--t3);text-transform:uppercase;white-space:nowrap}
+  .fork-facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-top:2.6rem}
+  .fork-facts div{background:var(--bg);padding:1.7rem 2rem}
+  .fork-facts .k{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;display:block;margin-bottom:.6rem}
+  .fork-facts .o .k{color:var(--rec)} .fork-facts .f .k{color:var(--fork)}
+  .fork-facts p{color:var(--t1);font-size:.95rem}
+  .fork-note{margin-top:1.6rem;font-size:.88rem;color:var(--t2);max-width:40rem}
+
+  /* sdk */
+  .sdk{display:grid;grid-template-columns:.9fr 1.1fr;gap:4.5rem;align-items:center}
+  pre{background:var(--surface);border:1px solid var(--border);padding:1.8rem;font-family:var(--mono);font-size:.8rem;line-height:1.8;overflow-x:auto;color:var(--t2)}
+  pre .k{color:var(--rec)} pre .s{color:var(--proof)} pre .c{color:var(--t3)}
+
+  /* mcp inline */
+  .mcp-row{margin-top:2.8rem;display:flex;gap:0;flex-wrap:wrap;border:1px solid var(--border)}
+  .mcp-row span{font-family:var(--mono);font-size:.74rem;letter-spacing:.06em;color:var(--t1);padding:1.1rem 1.8rem;border-right:1px solid var(--border);flex:1;min-width:11rem;transition:background .25s,color .25s;cursor:default}
+  .mcp-row span:last-child{border-right:0}
+  .mcp-row span:hover{background:var(--rec);color:#050505}
+
+  /* close */
+  .close-sec h2{font-size:clamp(2.2rem,5.4vw,3.8rem);max-width:18ch}
+  .triplet{margin:2.6rem 0 3rem;border-left:2px solid var(--rec);padding-left:1.6rem;max-width:36rem}
+  .triplet p{font-size:1rem;color:var(--t2)}
+  .triplet p b{color:var(--t1);font-weight:500}
+
+  footer{border-top:1px solid var(--border);padding:2.4rem 0}
+  footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+  footer p,footer a{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);text-decoration:none}
+  footer a:hover{color:var(--rec)}
+
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:880px){
+    section{padding:4.5rem 0}
+    header{padding:8.5rem 0 0}
+    nav ul{display:none}
+    .stack .item{grid-template-columns:3rem 1fr;}
+    .stack .item p{grid-column:2}
+    .loop{grid-template-columns:1fr 1fr;gap:2.2rem 0}
+    .loop .verb:nth-child(odd){border-left:0;padding-left:0}
+    .packet-zone,.sdk{grid-template-columns:1fr;gap:2.6rem}
+    .states,.fork-facts{grid-template-columns:1fr}
+    .rail .stop:nth-child(even) .lbl,.rail .stop:nth-child(even) .tick{display:none}
+    .band img{height:46vh}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#"><i></i>REPLAY</a>
+    <ul>
+      <li><a href="#record">Record</a></li>
+      <li><a href="#verify">Verify</a></li>
+      <li><a href="#fork">Fork</a></li>
+      <li><a href="#sdk">SDK</a></li>
+    </ul>
+    <a class="btn" href="#sdk">Record a run</a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow"><i></i>RECORDER: LIVE &nbsp;·&nbsp; CHAIN: MANTLE &nbsp;·&nbsp; <b>PACKET HASH: VERIFIED</b></p>
+    <h1>Debug the moment your agent went <span class="w">wrong</span>.</h1>
+    <p class="lede">REPLAY records every prompt, tool call, decision, and transaction your on-chain AI agent makes — then lets you scrub, verify, and fork the timeline.</p>
+    <div class="cta">
+      <a class="btn solid" href="#sdk">Start recording</a>
+      <a class="btn" href="#record">View a demo run</a>
+    </div>
+  </div>
+
+  <div class="rail-zone">
+    <div class="wrap">
+      <div class="rail-meta">
+        <span>RUN <b>meridian-2026-06-08</b></span>
+        <span>AGENT <b>MERIDIAN</b></span>
+        <span>STEPS <b>7</b></span>
+        <span class="v">● HISTORY VERIFIED</span>
+      </div>
+      <div class="rail" id="rail">
+        <div class="line"><div class="fill"></div></div>
+        <div class="head"></div>
+        <div class="stops">
+          <div class="stop"><span class="seq">01</span><span class="pt"></span><span class="lbl">Prompt received</span><span class="tick">✓ anchored</span></div>
+          <div class="stop"><span class="seq">02</span><span class="pt"></span><span class="lbl">Model output</span><span class="tick">✓ anchored</span></div>
+          <div class="stop"><span class="seq">03</span><span class="pt"></span><span class="lbl">Tool call</span><span class="tick">✓ anchored</span></div>
+          <div class="stop sel"><span class="seq">04</span><span class="pt"></span><span class="lbl">Risk check</span><span class="tick">✓ anchored</span></div>
+          <div class="stop"><span class="seq">05</span><span class="pt"></span><span class="lbl">Tx prepared</span><span class="tick">✓ anchored</span></div>
+          <div class="stop"><span class="seq">06</span><span class="pt"></span><span class="lbl">Tx submitted</span><span class="tick">✓ anchored</span></div>
+          <div class="stop anchor"><span class="seq">07</span><span class="pt"></span><span class="lbl">Anchor confirmed</span><span class="tick">✓ on mantle</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <p class="eyebrow">01 · The problem</p>
+    <h2>Console logs break when agents move money.</h2>
+    <div class="stack">
+      <div class="item reveal"><span class="n">/01</span><h3>No reliable history</h3><p>Logs can be incomplete, local, or edited — by the same operator being audited.</p></div>
+      <div class="item reveal"><span class="n">/02</span><h3>No decision context</h3><p>You cannot see what the agent knew at the moment it acted.</p></div>
+      <div class="item reveal"><span class="n">/03</span><h3>No safe replay</h3><p>You cannot test what would have happened without rebuilding the run.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="record">
+  <div class="wrap">
+    <p class="eyebrow">02 · The loop</p>
+    <h2>Record. Scrub. Verify. Fork.</h2>
+    <div class="loop">
+      <div class="verb reveal"><span class="word">Record</span><p>Every decision becomes an Evidence Packet — hashed and anchored on Mantle as it happens.</p></div>
+      <div class="verb reveal"><span class="word">Scrub</span><p>Walk the run timeline step by step. Sequence, timestamps, block numbers.</p></div>
+      <div class="verb reveal"><span class="word">Verify</span><p>Recompute every hash against its on-chain anchor. Tampering fails closed.</p></div>
+      <div class="verb reveal"><span class="word">Fork</span><p>Edit the inputs at any step and re-execute the decision. Diff the outcome.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap packet-zone">
+    <div>
+      <p class="eyebrow">03 · The artifact</p>
+      <h2>Every step leaves evidence.</h2>
+      <p class="lede">What the agent saw, what it answered, what it called, what it signed — one structured packet per decision, hash-anchored the moment it happens. This one is real: recorded by our MERIDIAN yield agent and anchored on Mantle Sepolia.</p>
+    </div>
+    <div class="packet reveal">
+      <table>
+        <tr><td>agent</td><td>meridian</td></tr>
+        <tr><td>event</td><td>decision · risk_check</td></tr>
+        <tr><td>model input</td><td class="dim">{ idle_usdy: 5000, aave_apy: 4.81, reserve: 12% }</td></tr>
+        <tr><td>model output</td><td class="dim">propose MOVE → aave_usdy_supply</td></tr>
+        <tr><td>packet hash</td><td>1bdc92ad0cb25d8cfdf228a4b5ceb523a00d…e7a61c</td></tr>
+        <tr><td>anchor tx</td><td>0x475a60418e248c9ce524a94439a5526aba…7508bf</td></tr>
+        <tr><td>contract</td><td>FlightRecorder · 0x4d46…d062</td></tr>
+        <tfoot><tr><td>status</td><td class="ok">VERIFIED — HASH MATCHES ON-CHAIN ANCHOR</td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="verify">
+  <div class="wrap">
+    <p class="eyebrow">04 · The proof</p>
+    <h2>History that cannot be quietly edited.</h2>
+    <p class="lede">Click verify and REPLAY re-fetches the packet, recomputes its SHA-256, and checks it against the Mantle anchor. There are two possible answers.</p>
+    <div class="states">
+      <div class="state good reveal">
+        <span class="tag">VERIFIED</span>
+        <p><b>Packet hash matches the on-chain anchor.</b> This step provably happened, exactly as recorded.</p>
+        <p class="hashline">1bdc92ad…e7a61c&nbsp; ≡ &nbsp;1bdc92ad…e7a61c</p>
+      </div>
+      <div class="state bad reveal">
+        <span class="tag">MISMATCH</span>
+        <p><b>The packet no longer matches its anchor.</b> Someone touched the record. Verification fails closed.</p>
+        <p class="hashline">8f02c1aa…94d3e0&nbsp; ≠ &nbsp;1bdc92ad…e7a61c</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="band">
+  <img src="assets/blackbox-hero.png" alt="A matte black flight recorder projecting an orange decision timeline" />
+  <div class="copy"><div class="wrap">
+    <p class="eyebrow" style="color:var(--rec)">05 · The thesis</p>
+    <h2>Agents that move money need a black box.</h2>
+    <p>REPLAY anchors every agent decision on Mantle so history cannot be rewritten by whoever is being investigated.</p>
+  </div></div>
+</div>
+
+<section id="fork">
+  <div class="wrap">
+    <p class="eyebrow">06 · Time travel</p>
+    <h2>Find the bug without redeploying.</h2>
+    <p class="lede">Pick the step where it went wrong. Edit the inputs — the risk floor, the balance, the APY. REPLAY re-executes the decision deterministically and shows you both timelines.</p>
+    <div class="forkviz reveal">
+      <div class="base"></div>
+      <div class="orig"></div>
+      <div class="alt"></div>
+      <span class="node n1"></span>
+      <span class="at">FORK @ STEP 04 · RISK CHECK</span>
+      <span class="end-o">ORIGINAL · REBALANCE EXECUTED</span>
+      <span class="end-f">FORK · DECLINED — RISK FLOOR HELD</span>
+    </div>
+    <div class="fork-facts">
+      <div class="o reveal"><span class="k">Original run</span><p>Risk threshold 0.42 → checks passed → funds moved.</p></div>
+      <div class="f reveal"><span class="k">Forked run</span><p>Risk threshold 0.55 → check failed → no action taken.</p></div>
+    </div>
+    <p class="fork-note">Forks re-execute the agent's decision logic — there is no model call in the replay path, so the same fork gives the same answer every time. Reproducible, not probabilistic.</p>
+  </div>
+</section>
+
+<section id="sdk">
+  <div class="wrap sdk">
+    <div>
+      <p class="eyebrow">07 · Instrument</p>
+      <h2>Six lines to give your agent a black box.</h2>
+      <p class="lede">Works with any viem-based agent. Judges can run the full record-and-verify path offline with the in-memory backend — no wallet, no gas.</p>
+      <div class="mcp-row">
+        <span>REPLAY_RECORD</span><span>REPLAY_RECALL</span><span>REPLAY_VERIFY</span><span>REPLAY_FORK</span>
+      </div>
+    </div>
+    <div class="reveal">
+<pre><span class="k">import</span> { createReplay } <span class="k">from</span> <span class="s">"replay"</span>;
+
+<span class="k">const</span> replay = createReplay({ agentId: <span class="s">"meridian"</span>,
+  runId, backend });
+
+<span class="k">await</span> replay.record({ eventType: <span class="s">"decision"</span>,
+  payload: { input, output, toolCalls, txHash } });
+<span class="c">// Recorded. Hashed. Anchored on Mantle.</span></pre>
+    </div>
+  </div>
+</section>
+
+<section class="close-sec">
+  <div class="wrap">
+    <p class="eyebrow">08 · The close</p>
+    <h2>Stop guessing why your agent acted.</h2>
+    <div class="triplet">
+      <p><b>Datadog</b> tells you what your app did.</p>
+      <p><b>LangSmith</b> tells you what your LLM did.</p>
+      <p><b>REPLAY</b> tells you what your on-chain agent did — and lets you time-travel back to fix it.</p>
+    </div>
+    <div class="cta">
+      <a class="btn solid" href="#sdk">Record a run</a>
+      <a class="btn" href="https://explorer.sepolia.mantle.xyz/address/0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062" target="_blank" rel="noopener">Inspect the anchor contract</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>REPLAY — the black box for on-chain AI agents</p>
+    <p>FlightRecorder.sol · <a href="https://explorer.sepolia.mantle.xyz/address/0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062" target="_blank" rel="noopener">0x4d46…d062</a> · Mantle Sepolia · Sourcify exact match</p>
+  </div>
+</footer>
+
+<script>
+  // reveal on scroll
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // timeline: light stops as the playhead sweeps (9s loop, in sync with CSS)
+  const stops = [...document.querySelectorAll('#rail .stop')];
+  function cycle(){
+    stops.forEach(s => s.classList.remove('lit'));
+    stops.forEach((s, i) => setTimeout(() => s.classList.add('lit'), (i / (stops.length - 1)) * 9000 * 0.88));
+  }
+  cycle(); setInterval(cycle, 9000);
+</script>
+</body>
+</html>

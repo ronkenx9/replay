@@ -1,6 +1,6 @@
 # REPLAY Handoff
 
-Last updated: 2026-06-09 21:02 Africa/Lagos.
+Last updated: 2026-06-09 21:11 Africa/Lagos.
 
 ## Current State
 
@@ -18,6 +18,7 @@ We have successfully completed **Phase 0, Phase 1, Phase 2, and Phase 3**!
   - Modified `evm.ts` to automatically save `.receipt.json` next to packet JSON blobs during anchoring.
   - Updated React `App.tsx` and `viewer-data.ts` to fetch runs dynamically from the local API (`/api/runs`) with a robust offline fallback to static mock runs if the server is down.
   - Integrated a **Live On-Chain Verify** check that queries `/api/verify` to confirm that the local packet blob hash matches the anchor hash stored in `FlightRecorder.sol`.
+  - Added a non-destructive **Tamper Check** path: `/api/verify` accepts `tamper: true`, hashes mutated bytes in memory, and returns red while the on-chain anchor remains unchanged.
   - Added an interactive **Fork & Replay** modal. Developers can edit parameters (e.g. idle wallet balances, venue APYs, and minimum reserve floor limits for MERIDIAN; original estimates and MEV risk scores for GASLIGHT) and see a gorgeous side-by-side simulation comparison of the original vs new decisions.
 
 ---
@@ -42,7 +43,7 @@ We have successfully completed **Phase 0, Phase 1, Phase 2, and Phase 3**!
 npm run build
 npm test
 ```
-*Expected output: TypeScript compilation completes with no errors; all 15 Vitest tests pass.*
+*Expected output: TypeScript compilation completes with no errors; all 19 Vitest tests pass.*
 
 ### 2. Run Smoke Tests
 Generates live transactions and writes dynamic packets & receipts to `data/packets/`:

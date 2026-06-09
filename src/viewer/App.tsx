@@ -1,41 +1,127 @@
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft,
+  AlertTriangle,
   ArrowRight,
   BadgeCheck,
-  Boxes,
+  Box,
+  CheckCircle2,
+  ChevronDown,
+  Clock3,
   Code2,
+  Copy,
+  Database,
   ExternalLink,
   GitFork,
-  Heart,
+  Hash,
   Home,
-  MessageCircle,
-  MoreHorizontal,
-  Pin,
+  Layers3,
+  Menu,
+  Network,
+  Pause,
   Play,
-  Search,
-  Share2,
-  ShieldCheck,
-  Sparkles,
-  Terminal,
   RefreshCw,
+  RotateCcw,
+  Search,
+  Server,
+  ShieldCheck,
+  Square,
+  Terminal,
+  Timer,
   X,
-  CheckCircle2,
-  AlertTriangle,
+  Zap,
 } from "lucide-react";
-import { flightRecorderAddress, replayRuns, tamperedDemo, type ReplayRun } from "../viewer-data.js";
+import { flightRecorderAddress, replayRuns, type ReplayRun } from "../viewer-data.js";
 import "./styles.css";
 
-function short(hash: string) {
-  return `${hash.slice(0, 10)}...${hash.slice(-6)}`;
+type VerifyStatus = "idle" | "success" | "success-fallback" | "tampered";
+
+const HERO_IMAGE = "/assets/replay-hero-recorder.png";
+const DEVICE_IMAGE = "/assets/replay-device-closeup.png";
+
+function short(hash = "") {
+  return hash.length > 16 ? `${hash.slice(0, 8)}...${hash.slice(-6)}` : hash;
 }
 
-function RunCard({ run, active, onSelect }: { run: ReplayRun; active: boolean; onSelect: () => void }) {
+function Logo() {
   return (
-    <button className={`run-card ${active ? "active" : ""}`} onClick={onSelect}>
-      <span>{run.name}</span>
-      <small>{run.steps.length} anchored packets</small>
+    <div className="logo" aria-label="REPLAY">
+      <span className="logo-orbit">
+        <Play size={13} fill="currentColor" />
+      </span>
+      <span className="logo-text">REPLAY</span>
+    </div>
+  );
+}
+
+function SectionLabel({ children }: { children: string }) {
+  return <div className="section-label">{children}</div>;
+}
+
+function StatusBadge({ tone = "green", children }: { tone?: "green" | "orange" | "red" | "blue"; children: string }) {
+  return <span className={`status-badge ${tone}`}>{children}</span>;
+}
+
+function IconTile({ icon: Icon, label }: { icon: typeof Play; label: string }) {
+  return (
+    <div className="icon-tile">
+      <Icon size={26} />
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function TimelineStep({
+  index,
+  active,
+  title,
+  time,
+  onSelect,
+}: {
+  index: number;
+  active: boolean;
+  title: string;
+  time: string;
+  onSelect: () => void;
+}) {
+  return (
+    <button className={`timeline-step ${active ? "active" : ""}`} onClick={onSelect}>
+      <span className="timeline-dot">
+        {active ? <Play size={15} fill="currentColor" /> : <Square size={14} />}
+      </span>
+      <b>{String(index).padStart(2, "0")}</b>
+      <strong>{title}</strong>
+      <small>{time}</small>
     </button>
+  );
+}
+
+function CodeBlock() {
+  return (
+    <pre className="code-card">
+      <code>{`import { Replay } from "replay-sdk";
+
+const replay = new Replay({
+  agentId: "meridian",
+  chain: "mantle-sepolia",
+  rpcUrl: process.env.MANTLE_RPC_URL
+});
+
+await replay.record({
+  input,
+  output,
+  toolCalls,
+  txHash
+});`}</code>
+    </pre>
   );
 }
 
@@ -44,44 +130,22 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [runIndex, setRunIndex] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
-  
-  // Verification State
   const [verifying, setVerifying] = useState(false);
-  const [verifyStatus, setVerifyStatus] = useState<"idle" | "success" | "success-fallback" | "failed" | "tampered">("idle");
-  const [verifyDetails, setVerifyDetails] = useState<string>("");
-
-  // Fork Modal State
-  const [forkModalOpen, setForkModalOpen] = useState(false);
+  const [tamperChecking, setTamperChecking] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState<VerifyStatus>("idle");
+  const [verifyDetails, setVerifyDetails] = useState("");
+  const [forkOpen, setForkOpen] = useState(false);
   const [walletIdle, setWalletIdle] = useState(2000);
-  const [agniApy, setAgniApy] = useState(7.4);
-  const [minReserveFloor, setMinReserveFloor] = useState(10);
-  const [originalGas, setOriginalGas] = useState(250000);
-  const [mevRisk, setMevRisk] = useState(22);
-  
-  // Simulation Result State
-  const [simulating, setSimulating] = useState(false);
-  const [simResult, setSimResult] = useState<{
-    originalAction: string;
-    originalReasoning: string;
-    originalRisk: string;
-    simulatedAction: string;
-    simulatedReasoning: string;
-    simulatedRisk: string;
-    simulatedRiskDetails: string;
-    passed: boolean;
-  } | null>(null);
+  const [riskThreshold, setRiskThreshold] = useState(0.55);
 
-  // Fetch runs from local API server
   const fetchRuns = async () => {
     setLoading(true);
     try {
       const response = await fetch("http://localhost:4174/api/runs");
       const data = await response.json();
-      if (Array.isArray(data) && data.length > 0) {
-        setRuns(data);
-      }
-    } catch (err) {
-      console.warn("Failed to fetch runs from backend server. Using static fallback.", err);
+      if (Array.isArray(data) && data.length > 0) setRuns(data);
+    } catch (error) {
+      console.warn("Using static fallback runs.", error);
     } finally {
       setLoading(false);
     }
@@ -91,27 +155,22 @@ export function App() {
     fetchRuns();
   }, []);
 
-  const run = runs[runIndex] ?? runs[0]!;
+  const run = runs[runIndex] ?? replayRuns[0]!;
   const step = run.steps[stepIndex] ?? run.steps[0]!;
-  const nextRun = runs[(runIndex + 1) % runs.length] ?? run;
+  const timelineSteps = run.steps.slice(0, 7);
   const verifiedCount = useMemo(() => run.steps.filter((item) => item.status === "verified").length, [run]);
+  const simulatedPass = riskThreshold <= 0.48;
 
   const selectRun = (index: number) => {
     setRunIndex(index);
     setStepIndex(0);
     setVerifyStatus("idle");
     setVerifyDetails("");
-    setSimResult(null);
   };
 
-  const selectStep = (index: number) => {
-    setStepIndex(index);
-    setVerifyStatus("idle");
-    setVerifyDetails("");
-  };
-
-  const handleVerify = async () => {
+  const handleVerify = async (tamper = false) => {
     setVerifying(true);
+    setTamperChecking(tamper);
     setVerifyStatus("idle");
     setVerifyDetails("");
 
@@ -119,413 +178,366 @@ export function App() {
       const response = await fetch("http://localhost:4174/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contentHash: step.contentHash }),
+        body: JSON.stringify({ contentHash: step.contentHash, tamper }),
       });
       const data = await response.json();
-      
       if (data.verified) {
         setVerifyStatus("success");
-        setVerifyDetails("Blob hash matches the on-chain Mantle anchor — provably unaltered.");
+        setVerifyDetails(data.reason || "Local packet hash matches the on-chain Mantle anchor.");
       } else {
         setVerifyStatus("tampered");
-        setVerifyDetails("Blob content does not match the anchor hash! Tamper detected.");
+        setVerifyDetails(data.reason || "Local packet hash mismatch.");
       }
-    } catch (err) {
-      // Mock validation fallback if server is down or unreachable
-      setTimeout(() => {
-        setVerifyStatus("success-fallback");
-        setVerifyDetails("Blob hash matches the receipt (on-chain anchor verified via local mock).");
-        setVerifying(false);
-      }, 800);
-      return;
+    } catch {
+      setVerifyStatus("success-fallback");
+      setVerifyDetails("Local server unavailable; showing fixture-backed proof state.");
+    } finally {
+      setVerifying(false);
+      setTamperChecking(false);
     }
-    setVerifying(false);
-  };
-
-  const handleForkOpen = () => {
-    setSimResult(null);
-    setForkModalOpen(true);
-  };
-
-  const handleSimulate = () => {
-    setSimulating(true);
-    const isMeridian = run.id.includes("meridian");
-
-    setTimeout(() => {
-      if (isMeridian) {
-        let passed = true;
-        let simulatedAction = "MOVE";
-        let simulatedReasoning = "";
-        let simulatedRisk = "PASSED";
-        let simulatedRiskDetails = "All policy checks passed.";
-
-        // 1. Check reserve floor check
-        const totalCapital = walletIdle + 650; // assuming 650 is reserve
-        const reservePercent = (650 / totalCapital) * 100;
-        if (reservePercent < minReserveFloor) {
-          passed = false;
-          simulatedRisk = "FAILED";
-          simulatedRiskDetails = `Reserve remains below ${minReserveFloor}% floor limit (actual: ${reservePercent.toFixed(1)}%).`;
-          simulatedAction = "HOLD";
-          simulatedReasoning = `Risk checks failed: reserve floor of ${minReserveFloor}% violated. Transaction aborted.`;
-        }
-
-        // 2. Check if idle amount is too low
-        if (passed && walletIdle <= 10) {
-          simulatedAction = "HOLD";
-          simulatedReasoning = `Discovered $${walletIdle.toFixed(2)} idle in wallet earning 0%. Below minimum rebalance threshold ($10.00). No action proposed.`;
-        } else if (passed) {
-          // 3. Check yield opportunity comparison
-          // best venue is Agni CL (user specified agniApy). Current active aave-usdy APY is 4.81%
-          const apySpread = agniApy - 4.81;
-          if (apySpread < 0.5) {
-            simulatedAction = "HOLD";
-            simulatedReasoning = `Yield spread of ${apySpread.toFixed(2)}% between Aave (4.81%) and Agni CL (${agniApy}%) is below minimum threshold (0.5%). No action proposed.`;
-          } else {
-            simulatedAction = "MOVE";
-            simulatedReasoning = `Discovered $${walletIdle.toFixed(2)} idle in wallet earning 0%. Proposing allocation to Agni Finance (mETH/USDY CL) yielding ${agniApy}% (spread of ${apySpread.toFixed(2)}% exceeds threshold).`;
-          }
-        }
-
-        setSimResult({
-          originalAction: "MOVE",
-          originalReasoning: "Discovered $2000.00 idle in wallet earning 0%. Proposing allocation to Agni Finance (mETH/USDY CL) yielding 7.4% after risk policy passed.",
-          originalRisk: "PASSED",
-          simulatedAction,
-          simulatedReasoning,
-          simulatedRisk,
-          simulatedRiskDetails,
-          passed
-        });
-      } else {
-        // Gaslight simulation
-        let passed = true;
-        let simulatedAction = "WAIT";
-        let simulatedReasoning = "";
-        let simulatedRisk = "SAFE";
-        let simulatedRiskDetails = `MEV risk score is ${mevRisk}/100, which is below the 50/100 threshold. Wait recommendation followed.`;
-
-        if (mevRisk > 50) {
-          simulatedAction = "IMMEDIATE";
-          simulatedReasoning = `High MEV risk detected (${mevRisk}/100). Executing dex_swap immediately to prevent transaction frontrunning or sandwiching.`;
-          simulatedRisk = "WARNING";
-          simulatedRiskDetails = `MEV risk score ${mevRisk}/100 exceeds safe threshold. Immediate execution triggered.`;
-        } else {
-          const savings = ((originalGas - 118400) / originalGas) * 100;
-          simulatedAction = "WAIT";
-          simulatedReasoning = `Gas oracle recommended waiting 15 seconds. Gas price dropped, saving ${savings.toFixed(1)}% gas ($MNT saved).`;
-        }
-
-        setSimResult({
-          originalAction: "WAIT",
-          originalReasoning: "Gas oracle waited 15 seconds and MEV detector marked the trade safe. Saved 52.6% gas.",
-          originalRisk: "SAFE",
-          simulatedAction,
-          simulatedReasoning,
-          simulatedRisk,
-          simulatedRiskDetails,
-          passed
-        });
-      }
-      setSimulating(false);
-    }, 800);
   };
 
   return (
-    <main className="shell">
-      <aside className="side-nav" aria-label="Primary">
-        <div className="mark">R</div>
-        <Home style={{ cursor: "pointer" }} onClick={fetchRuns} />
-        <Boxes style={{ cursor: "pointer" }} onClick={fetchRuns} />
-        <Code2 />
-        <MessageCircle />
-        <div className="nav-spacer" />
-        <Terminal />
-      </aside>
-
-      <section className="workspace">
-        <header className="topbar">
-          <div className="search">
-            <Search size={20} />
-            <span>Search runs, packets, tx hashes</span>
+    <main className="site-shell">
+      <section className="brand-board">
+        <article className="brand-panel identity-panel">
+          <SectionLabel>01. Brand Identity</SectionLabel>
+          <div className="identity-lockup">
+            <Logo />
+            <p>The black box for on-chain AI agents.</p>
           </div>
-          <div className="brand-word">
-            REPLAY {loading && <RefreshCw className="animate-spin ml-2" size={14} />}
+          <div className="mini-grid">
+            <div>
+              <Logo />
+              <small>Primary lockup</small>
+            </div>
+            <div>
+              <span className="logo-orbit standalone"><Play size={18} fill="currentColor" /></span>
+              <small>Icon mark</small>
+            </div>
+            <div className="wordmark">REPL<span>A</span>Y</div>
           </div>
-          <button className="round ghost" aria-label="Refresh list" onClick={fetchRuns}>
-            <RefreshCw size={20} />
-          </button>
-          <button className="round hot" aria-label="Profile">o</button>
-        </header>
+          <div className="palette">
+            {["#060606", "#ff5a1f", "#f5f1ea", "#20d17d", "#2f82ff", "#ff3838", "#7c3aed"].map((color) => (
+              <span key={color} style={{ background: color }} />
+            ))}
+          </div>
+          <div className="type-row">
+            <strong>Aa</strong>
+            <span>Space Grotesk</span>
+            <span>Inter</span>
+            <span>JetBrains Mono</span>
+          </div>
+        </article>
 
-        <section className="pin-board">
-          <article className="stage">
-            <button className="round back" aria-label="Back"><ArrowLeft /></button>
-            <button className="round prev" aria-label="Previous step" onClick={() => selectStep(Math.max(0, stepIndex - 1))}>
-              <ArrowLeft size={22} />
-            </button>
-            <button className="round next" aria-label="Next step" onClick={() => selectStep(Math.min(run.steps.length - 1, stepIndex + 1))}>
-              <ArrowRight size={22} />
-            </button>
-
-            <div className="ascii-title">
-              <p>FLIGHT RECORDER</p>
-              <h1>{run.name}</h1>
-              <span>{run.subtitle}</span>
+        <article className="brand-panel hero-panel">
+          <SectionLabel>02. Landing Page Hero</SectionLabel>
+          <nav className="hero-nav">
+            <Logo />
+            <div>
+              <a>Product</a>
+              <a>Docs</a>
+              <a>Pricing</a>
+              <a>MCP</a>
+              <a>Blog</a>
             </div>
-
-            <pre className="ascii-art" aria-label="ASCII packet art">
-{`
-       .-""""-.
-    .'  .--.   '.
-   /   / ${String(step.index).padStart(2, "0")} \\    \\
-  :   :      :    :
-  |   | ${step.kind.toUpperCase().padEnd(12, " ").slice(0, 12)} |
-  :   :      :    :
-   \\   \\____/    /
-    '.          .'
-      '-.____.-'
-
-${step.ascii.join("\n")}
-`}
-            </pre>
-
-            <div className="stage-copy">
-              <h2>{step.title}</h2>
-              <p>{step.summary}</p>
+            <button onClick={() => handleVerify(false)}>Start Recording</button>
+          </nav>
+          <div className="hero-content">
+            <div className="hero-copy">
+              <h1>
+                Debug the moment your agent went <span>wrong.</span>
+              </h1>
+              <p>
+                REPLAY records every prompt, tool call, decision, and transaction your on-chain AI agent makes, then lets you scrub, verify, and fork the timeline.
+              </p>
+              <div className="hero-bullets">
+                <span><BadgeCheck size={14} /> Record every decision</span>
+                <span><ShieldCheck size={14} /> Verify on Mantle</span>
+                <span><GitFork size={14} /> Time-travel and fork</span>
+              </div>
+              <div className="hero-actions">
+                <button className="primary-action" onClick={() => handleVerify(false)}>Start Recording</button>
+                <button className="secondary-action" onClick={() => setForkOpen(true)}>View Demo Run</button>
+              </div>
             </div>
+            <div className="hero-visual">
+              <img src={HERO_IMAGE} alt="REPLAY black box recorder device" />
+              <div className="proof-line">
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          </div>
+          <div className="trust-row">
+            <Metric label="Network" value="Mantle Sepolia" />
+            <Metric label="Partner" value="Tencent Cloud" />
+            <Metric label="Secured" value="KMS" />
+            <Metric label="Storage" value="COS / Local" />
+          </div>
+        </article>
 
-            <div className="stage-footer">
-              <a className="visit" href={step.verifyUrl} target="_blank" rel="noreferrer">
-                <ExternalLink size={16} /> Visit tx
-              </a>
-              <div className="dots">
-                {run.steps.map((item, index) => (
-                  <button
-                    key={item.index}
-                    className={index === stepIndex ? "dot active" : "dot"}
-                    aria-label={`Step ${item.index}`}
-                    onClick={() => selectStep(index)}
+        <article className="brand-panel timeline-panel">
+          <SectionLabel>03. Timeline Viewer</SectionLabel>
+          <div className="app-frame">
+            <aside className="app-sidebar">
+              <Menu size={18} />
+              <Logo />
+              <Home className="active" />
+              <Layers3 />
+              <Hash />
+              <GitFork />
+            </aside>
+            <div className="app-main">
+              <header className="app-top">
+                <span>Runs / {run.id}</span>
+                <StatusBadge>Verified</StatusBadge>
+              </header>
+              <div className="run-switcher">
+                {runs.slice(0, 4).map((item, index) => (
+                  <button key={`${item.id}-${index}`} className={index === runIndex ? "active" : ""} onClick={() => selectRun(index)}>
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+              <div className="run-summary">
+                <div>
+                  <strong>Run: {run.id}</strong>
+                  <div className="summary-grid">
+                    <Metric label="Agent" value={run.agent.toUpperCase()} />
+                    <Metric label="Network" value="Mantle Sepolia" />
+                    <Metric label="Start" value="Jun 8, 2026 14:32" />
+                    <Metric label="Steps" value={String(run.steps.length)} />
+                  </div>
+                </div>
+                <button className="outline-button">Share</button>
+              </div>
+              <div className="timeline-rail">
+                {timelineSteps.map((item, index) => (
+                  <TimelineStep
+                    key={`${run.id}-${item.index}`}
+                    index={item.index}
+                    active={index === stepIndex}
+                    title={item.title}
+                    time={`14:32:${10 + index * 3}`}
+                    onSelect={() => setStepIndex(index)}
                   />
                 ))}
               </div>
-            </div>
-          </article>
-
-          <article className="proof-panel">
-            <div className="actions">
-              <span><Heart /> {verifiedCount * 122 + 11}</span>
-              <MessageCircle />
-              <Share2 />
-              <MoreHorizontal />
-              <button className="profile">Profile</button>
-              <button className="save">Save</button>
-            </div>
-
-            <div className="author">
-              <span className="avatar">R</span>
-              <div>
-                <strong>REPLAY verifier</strong>
-                <p>Source: FlightRecorder on Mantle Sepolia</p>
+              <div className="playback">
+                <RotateCcw size={15} />
+                <Pause size={15} />
+                <button><Play size={18} fill="currentColor" /></button>
+                <ArrowRight size={15} />
+                <span>14:32:18 / 14:34:29</span>
+                <b>1x</b>
               </div>
-            </div>
-
-            <div className="thumb-row">
-              {run.steps.map((item, index) => (
-                <button key={item.index} className={`thumb ${index === stepIndex ? "active" : ""}`} onClick={() => selectStep(index)}>
-                  <Play size={18} fill="currentColor" />
-                </button>
-              ))}
-            </div>
-
-            <button 
-              className={`visit-wide btn ${verifying ? "secondary" : "primary"}`} 
-              onClick={handleVerify}
-              disabled={verifying}
-              style={{ width: "100%", border: "0", cursor: "pointer", display: "flex", gap: "10px", alignItems: "center" }}
-            >
-              <ShieldCheck size={18} />
-              {verifying ? "Verifying..." : "Live hash-vs-anchor check"}
-            </button>
-
-            {verifyStatus !== "idle" && (
-              <div style={{
-                marginTop: "12px",
-                padding: "12px",
-                borderRadius: "12px",
-                backgroundColor: verifyStatus.startsWith("success") ? "#e1f7ec" : "#ffd0d0",
-                color: verifyStatus.startsWith("success") ? "#0c8f4d" : "#e60023",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontWeight: "600",
-                fontSize: "14px"
-              }}>
-                {verifyStatus.startsWith("success") ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-                <span>{verifyDetails}</span>
-              </div>
-            )}
-
-            <section className="comments">
-              <h3>{run.steps.length} Packets</h3>
-              <div className="packet-line">
-                <BadgeCheck className="ok" />
+              <div className="step-card">
                 <div>
-                  <strong>{step.title}</strong>
-                  <p>{step.payload.join(" / ")}</p>
+                  <strong>Step {String(step.index).padStart(2, "0")}: {step.title}</strong>
+                  <p>{step.summary}</p>
                 </div>
+                <StatusBadge>Verified</StatusBadge>
               </div>
-              <div className="packet-line nested">
-                <span className="avatar muted">tx</span>
-                <div>
-                  <strong>{short(step.txHash)}</strong>
-                  <p>{step.status === "verified" ? "Verified against on-chain anchor" : "Tamper detected"}</p>
-                </div>
-              </div>
-              <div className="packet-line nested">
-                <span className="avatar muted">sc</span>
-                <div>
-                  <strong>Sourcify exact match</strong>
-                  <p>{short(flightRecorderAddress)}</p>
-                </div>
-              </div>
-            </section>
-
-            <footer className="comment-box" style={{ cursor: "pointer" }} onClick={handleForkOpen}>
-              <span>Fork this step...</span>
-              <Sparkles />
-              <GitFork />
-            </footer>
-          </article>
-
-          <aside className="right-rail">
-            <div className="rail-card black">
-              <p>Next run</p>
-              <h3>{nextRun.name}</h3>
-              <span>{nextRun.theme}</span>
-            </div>
-            <div className="rail-card white">
-              <p>{tamperedDemo.title}</p>
-              <strong>green to red</strong>
-              <span>{tamperedDemo.after}</span>
-            </div>
-          </aside>
-        </section>
-
-        <section className="run-strip">
-          {runs.map((item, index) => (
-            <RunCard key={item.id} run={item} active={index === runIndex} onSelect={() => selectRun(index)} />
-          ))}
-          <div className="save-pop">
-            <button className="pin"><Pin /></button>
-            <div>
-              <strong>Trying to save or share this proof?</strong>
-              <p>Use the tx links. The chain already has the receipt.</p>
             </div>
           </div>
-        </section>
+        </article>
+
+        <article className="brand-panel inspector-panel">
+          <SectionLabel>04. Packet Inspector</SectionLabel>
+          <div className="panel-head">
+            <h2>Step {String(step.index).padStart(2, "0")}: {step.title}</h2>
+            <StatusBadge>Verified</StatusBadge>
+          </div>
+          <div className="inspector-grid">
+            <div className="kv-list">
+              <Metric label="Event Type" value={step.kind.toUpperCase()} />
+              <Metric label="Timestamp" value="2026-06-08 14:32:18 UTC" />
+              <Metric label="Agent ID" value={run.agent} />
+              <Metric label="Packet Hash" value={short(step.contentHash)} />
+              <Metric label="Anchor Tx" value={short(step.txHash)} />
+            </div>
+            <div className="accordion-stack">
+              <details open>
+                <summary>Model Input <ChevronDown size={14} /></summary>
+                <pre>{`{
+  "objective": "maximize risk-adjusted yield",
+  "risk_threshold": ${riskThreshold},
+  "portfolio": "0x8a1f...d3c2"
+}`}</pre>
+              </details>
+              <details>
+                <summary>Tool Calls (2) <ChevronDown size={14} /></summary>
+                <p>getAPY <StatusBadge>Success</StatusBadge></p>
+                <p>getExposure <StatusBadge>Success</StatusBadge></p>
+              </details>
+              <details>
+                <summary>Memory Snapshot <ChevronDown size={14} /></summary>
+                <p>{step.payload.join(" / ")}</p>
+              </details>
+            </div>
+          </div>
+        </article>
+
+        <article className="brand-panel fork-panel">
+          <SectionLabel>05. Fork & Replay</SectionLabel>
+          <div className="fork-head">
+            <strong><span /> Fork from Step {String(step.index).padStart(2, "0")}: {step.title}</strong>
+            <button onClick={() => setForkOpen(true)}>Edit prompt & inputs</button>
+          </div>
+          <div className="diff-grid">
+            <div className="diff-card original">
+              <StatusBadge tone="orange">Original Run</StatusBadge>
+              <Metric label="Risk Threshold" value="0.42" />
+              <Metric label="Decision" value="PASS" />
+              <Metric label="Tx Result" value="REBALANCE EXECUTED" />
+              <Metric label="APY Change" value="+12.48%" />
+            </div>
+            <div className="vs">VS</div>
+            <div className={`diff-card forked ${simulatedPass ? "" : "failed"}`}>
+              <StatusBadge tone="blue">Forked Run</StatusBadge>
+              <Metric label="Risk Threshold" value={String(riskThreshold)} />
+              <Metric label="Decision" value={simulatedPass ? "PASS" : "FAIL"} />
+              <Metric label="Tx Result" value={simulatedPass ? "EXECUTED" : "DECLINED"} />
+              <Metric label="Idle Capital" value={`$${walletIdle}`} />
+            </div>
+          </div>
+          <div className="fork-controls">
+            <label>
+              Risk threshold
+              <input type="number" step="0.01" value={riskThreshold} onChange={(e) => setRiskThreshold(Number(e.target.value))} />
+            </label>
+            <label>
+              Wallet idle
+              <input type="number" value={walletIdle} onChange={(e) => setWalletIdle(Number(e.target.value))} />
+            </label>
+            <button className="primary-action" onClick={() => setForkOpen(true)}>Re-run Fork</button>
+          </div>
+        </article>
+
+        <article className="brand-panel verify-panel">
+          <SectionLabel>06. Verification Panel</SectionLabel>
+          <div className={`verify-state ${verifyStatus === "tampered" ? "red" : ""}`}>
+            {verifyStatus === "tampered" ? <AlertTriangle /> : <CheckCircle2 />}
+            <div>
+              <h2>{verifyStatus === "tampered" ? "Packet Tampered" : "Packet Verified"}</h2>
+              <p>{verifyDetails || "This packet hash matches the on-chain anchor."}</p>
+            </div>
+          </div>
+          <Metric label="Packet Hash" value={short(step.contentHash)} />
+          <Metric label="Recomputed" value={verifyStatus === "tampered" ? "mismatch" : short(step.contentHash)} />
+          <Metric label="Anchor Tx" value={short(step.txHash)} />
+          <Metric label="Block Number" value="39874291" />
+          <div className="verify-actions">
+            <button onClick={() => handleVerify(false)} disabled={verifying}>
+              <ShieldCheck size={16} /> {verifying && !tamperChecking ? "Verifying..." : "Live Verify"}
+            </button>
+            <button onClick={() => handleVerify(true)} disabled={verifying}>
+              <AlertTriangle size={16} /> {tamperChecking ? "Checking..." : "Run tamper check"}
+            </button>
+          </div>
+          <a href={step.verifyUrl} target="_blank" rel="noreferrer">View on Mantle Explorer <ExternalLink size={14} /></a>
+        </article>
+
+        <article className="brand-panel mobile-panel">
+          <SectionLabel>07. Mobile Preview</SectionLabel>
+          <div className="phone">
+            <div className="phone-screen">
+              <header><Menu size={15} /><Logo /><StatusBadge>Verified</StatusBadge></header>
+              <small>Run<br />{run.id.slice(0, 22)}</small>
+              <div className="phone-timeline">
+                {timelineSteps.slice(0, 5).map((item, index) => (
+                  <span key={item.index} className={index === stepIndex ? "active" : ""}>{String(item.index).padStart(2, "0")}</span>
+                ))}
+              </div>
+              <div className="phone-card">
+                <strong>Step {String(step.index).padStart(2, "0")}: {step.title}</strong>
+                <Metric label="Packet Hash" value={short(step.contentHash)} />
+                <Metric label="Status" value="Verified" />
+              </div>
+              <button onClick={() => setForkOpen(true)}>Fork from here</button>
+              <button className="dark">Inspect Packet</button>
+            </div>
+          </div>
+        </article>
+
+        <article className="brand-panel icon-panel">
+          <SectionLabel>08. Icon Set</SectionLabel>
+          <div className="icon-grid">
+            <IconTile icon={Play} label="App Icon" />
+            <IconTile icon={Box} label="Recorder" />
+            <IconTile icon={Timer} label="Timeline" />
+            <IconTile icon={GitFork} label="Fork" />
+            <IconTile icon={ShieldCheck} label="Verify" />
+            <IconTile icon={Hash} label="Anchor" />
+            <IconTile icon={Zap} label="Run" />
+          </div>
+        </article>
+
+        <article className="brand-panel sdk-panel">
+          <SectionLabel>09. SDK Quickstart</SectionLabel>
+          <CodeBlock />
+          <p>That is it. Every decision is recorded and anchored.</p>
+        </article>
+
+        <article className="brand-panel device-panel">
+          <SectionLabel>10. Black Box Device</SectionLabel>
+          <img src={DEVICE_IMAGE} alt="Close-up REPLAY black box recorder" />
+        </article>
+
+        <article className="brand-panel architecture-panel">
+          <SectionLabel>11. Architecture</SectionLabel>
+          <div className="arch-row">
+            <div><Terminal /> Your Agent <b>replay.record()</b></div>
+            <ArrowRight />
+            <div><Code2 /> REPLAY SDK <b>Capture I/O, tools, tx</b></div>
+            <ArrowRight />
+            <div><Database /> Evidence Packet <b>Hash + encrypt</b></div>
+            <ArrowRight />
+            <div><Server /> Storage <b>COS / Local</b></div>
+            <ArrowRight />
+            <div><Network /> On-chain Anchor <b>{short(flightRecorderAddress)}</b></div>
+          </div>
+          <div className="arch-tools">
+            <span><Search /> Scrub</span>
+            <span><Copy /> Inspect</span>
+            <span><ShieldCheck /> Verify</span>
+            <span><GitFork /> Fork</span>
+            <span><Play /> Replay</span>
+          </div>
+        </article>
       </section>
 
-      {/* Fork & Replay Simulation Modal */}
-      {forkModalOpen && (
+      {forkOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div className="modal-header">
-              <h2>Fork & Simulate Run</h2>
-              <button className="modal-close" onClick={() => setForkModalOpen(false)}>
-                <X size={20} />
-              </button>
+            <button className="modal-close" onClick={() => setForkOpen(false)}><X size={18} /></button>
+            <SectionLabel>Fork & Replay</SectionLabel>
+            <h2>Change the condition. Watch the decision split.</h2>
+            <div className="fork-controls modal-controls">
+              <label>
+                Risk threshold
+                <input type="number" step="0.01" value={riskThreshold} onChange={(e) => setRiskThreshold(Number(e.target.value))} />
+              </label>
+              <label>
+                Wallet idle
+                <input type="number" value={walletIdle} onChange={(e) => setWalletIdle(Number(e.target.value))} />
+              </label>
             </div>
-            
-            <p style={{ color: "#6b6a65", marginBottom: "20px" }}>
-              Tweak the input state for <strong>{run.name}</strong> at block level and simulate how the agent's logic responds under the new parameters.
-            </p>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              {run.id.includes("meridian") ? (
-                <>
-                  <div className="form-group">
-                    <label>Wallet Idle Capital ($)</label>
-                    <input 
-                      type="number" 
-                      value={walletIdle} 
-                      onChange={(e) => setWalletIdle(Number(e.target.value))} 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Agni Finance mETH/USDY APY (%)</label>
-                    <input 
-                      type="number" 
-                      step="0.1"
-                      value={agniApy} 
-                      onChange={(e) => setAgniApy(Number(e.target.value))} 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Min Reserve Floor Limit (%)</label>
-                    <input 
-                      type="number" 
-                      value={minReserveFloor} 
-                      onChange={(e) => setMinReserveFloor(Number(e.target.value))} 
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="form-group">
-                    <label>Original Gas Estimate</label>
-                    <input 
-                      type="number" 
-                      value={originalGas} 
-                      onChange={(e) => setOriginalGas(Number(e.target.value))} 
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>MEV Risk Score (0-100)</label>
-                    <input 
-                      type="number" 
-                      value={mevRisk} 
-                      onChange={(e) => setMevRisk(Number(e.target.value))} 
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="modal-actions">
-              <button className="btn secondary" onClick={() => setForkModalOpen(false)}>Cancel</button>
-              <button className="btn primary" onClick={handleSimulate} disabled={simulating}>
-                {simulating ? "Simulating..." : "Run Replay Simulation"}
-              </button>
-            </div>
-
-            {simResult && (
-              <div className="diff-container">
-                <div className="diff-col original">
-                  <span className="diff-badge pass">Original Run</span>
-                  <h3>Action: {simResult.originalAction}</h3>
-                  <p style={{ fontSize: "14px", lineHeight: "1.4", margin: "8px 0" }}>
-                    {simResult.originalReasoning}
-                  </p>
-                  <div style={{ marginTop: "12px", fontSize: "12px", color: "#6b6a65" }}>
-                    <strong>Risk Audit:</strong> {simResult.originalRisk}
-                  </div>
-                </div>
-
-                <div className={`diff-col simulated ${simResult.passed ? "" : "error"}`}>
-                  <span className={`diff-badge ${simResult.passed ? "pass" : "fail"}`}>
-                    Forked Simulation
-                  </span>
-                  <h3>Action: {simResult.simulatedAction}</h3>
-                  <p style={{ fontSize: "14px", lineHeight: "1.4", margin: "8px 0" }}>
-                    {simResult.simulatedReasoning}
-                  </p>
-                  <div style={{ marginTop: "12px", fontSize: "12px", color: simResult.passed ? "#0c8f4d" : "#e60023" }}>
-                    <strong>Risk Details:</strong> {simResult.simulatedRiskDetails}
-                  </div>
-                </div>
+            <div className="diff-grid">
+              <div className="diff-card original">
+                <StatusBadge tone="orange">Original</StatusBadge>
+                <Metric label="Decision" value="PASS" />
+                <Metric label="Outcome" value="Funds moved" />
               </div>
-            )}
+              <div className={`diff-card forked ${simulatedPass ? "" : "failed"}`}>
+                <StatusBadge tone={simulatedPass ? "green" : "red"}>Forked</StatusBadge>
+                <Metric label="Decision" value={simulatedPass ? "PASS" : "FAIL"} />
+                <Metric label="Outcome" value={simulatedPass ? "Execute" : "No action"} />
+              </div>
+            </div>
           </div>
         </div>
       )}

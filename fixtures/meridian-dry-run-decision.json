@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-06-09T20:30:00.000Z",
+  "cycle_id": "merid-replay-demo-0001",
+  "agent_address": "0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C",
+  "erc8004_token_id": "0",
+  "signals": {
+    "wallet_idle": 0,
+    "aave-meth": 3.42,
+    "aave-usdy": 4.81,
+    "merchant-moe-meth-mnt": 8.2,
+    "agni-finance-meth-usdy": 7.4
+  },
+  "bybit_signals": {
+    "mnt": { "symbol": "MNTUSDT", "fundingApr": 2.1 },
+    "eth": { "symbol": "ETHUSDT", "fundingApr": -0.4 }
+  },
+  "portfolio_before": {
+    "wallet_idle": 2000,
+    "aave-meth": 0,
+    "merchant-moe-meth-mnt": 0,
+    "agni-finance-meth-usdy": 0,
+    "reserve_mnt": 650
+  },
+  "risk_assessment": {
+    "passed": true,
+    "checks": [
+      {
+        "rule": "rebalance_cooldown",
+        "status": "pass",
+        "detail": "Cooldown satisfied in dry-run fixture"
+      },
+      {
+        "rule": "max_exposure_agni-finance-meth-usdy",
+        "status": "pass",
+        "detail": "Target venue exposure remains under 40% cap"
+      },
+      {
+        "rule": "min_reserve_floor",
+        "status": "pass",
+        "detail": "Reserve remains above 10% floor"
+      },
+      {
+        "rule": "max_gas_budget",
+        "status": "pass",
+        "detail": "Gas estimate 0.02 MNT, under 0.5 MNT cap"
+      }
+    ]
+  },
+  "proposal": {
+    "action": "MOVE",
+    "reasoning": "Discovered $2000.00 idle in wallet earning 0%. Proposing allocation to Agni Finance (mETH/USDY CL) yielding 7.4% after risk policy passed.",
+    "from": { "venue": "wallet_idle", "amount": "$2000.00" },
+    "to": { "venue": "agni-finance-meth-usdy", "expected_apy": "7.4%" },
+    "hedgeRecommendation": {
+      "required": true,
+      "symbol": "ETHUSDT",
+      "action": "SHORT",
+      "bybitFundingApr": -0.4,
+      "description": "Short ETH on Bybit to offset mETH LP exposure."
+    }
+  },
+  "execution": {
+    "tx_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "gas_used": "0.00014 MNT",
+    "status": "simulated",
+    "block": 0
+  }
+}

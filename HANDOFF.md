@@ -1,14 +1,14 @@
 # REPLAY Handoff
 
-Last updated: 2026-06-09 20:25 Africa/Lagos.
+Last updated: 2026-06-09 20:40 Africa/Lagos.
 
 ## Current State
 
 Phase 0 is complete and committed as the baseline port. Phase 1 is complete on Mantle Sepolia:
 FlightRecorder is deployed on chain 5003, bytecode is present, and live record→verify→tamper-fail
 passed. Phase 2 SDK is started: the capture SDK and toy-agent quickstart are
-done against the in-memory backend. MERIDIAN adapter is implemented as a pure decrypted-log
-converter, but the actual MERIDIAN dry-run gate is not complete yet.
+done against the in-memory backend. MERIDIAN adapter and smoke path are complete using a
+representative decrypted dry-run payload fixture.
 
 - `src/core/recorder.ts` — EVM-shaped BOUND blackbox recorder port.
 - `src/core/evidence.ts` — Evidence Packet layer and commitment proof helpers.
@@ -16,6 +16,8 @@ converter, but the actual MERIDIAN dry-run gate is not complete yet.
 - `src/backends/evm.ts` — filesystem blob storage + FlightRecorder `anchor`/`getAnchorFor` backend.
 - `src/sdk.ts` — caller-facing `createReplay(...).record`, `.wrap`, and `.recall` SDK.
 - `src/adapters/meridian.ts` — converts one decrypted MERIDIAN decision log into four Evidence Packets.
+- `fixtures/meridian-dry-run-decision.json` — representative MERIDIAN dry-run decision payload.
+- `scripts/meridian-replay-smoke.ts` — anchors and verifies the four MERIDIAN evidence packets.
 - `examples/toy-agent.ts` — six-line toy agent demo; uses memory backend until live EVM address exists.
 - `src/chains.ts` — Mantle + Mantle Sepolia config; Sepolia is pinned to `5003`.
 - `contracts/FlightRecorder.sol` — anchor contract with task-plan API: `anchor(runId, seq, packetHash)`, `getAnchor(runId, seq)`, `getAnchorFor(recorder, runId, seq)`.
@@ -31,10 +33,11 @@ npm run build
 forge test
 npm run deploy:flight-recorder
 npm run smoke:evm
+npm run smoke:meridian
 npm run demo:toy
 ```
 
-`npm test`, `npm run build`, `forge test`, `npm run demo:toy`, and `npm run smoke:evm` passed on 2026-06-09.
+`npm test`, `npm run build`, `forge test`, `npm run demo:toy`, `npm run smoke:evm`, and `npm run smoke:meridian` passed on 2026-06-09.
 `npm install` reports 5 audit findings from transitive packages; do not broad-upgrade during a gated phase unless you can rerun all tests.
 
 ## What Changed In Phase 0
@@ -45,8 +48,10 @@ npm run demo:toy
 
 ## Next Task
 
-Continue Phase 2 by running MERIDIAN dry-run and feeding the decrypted decision
-payload into `meridianDecisionToPackets(...)`. The adapter is tested; the real-run bridge is not.
+Continue Phase 2 by instrumenting gaslight's audit logger, or move to Phase 3 viewer if cutting
+gaslight. Note: MERIDIAN CLI did not emit a usable log during live dry-run attempts: one run held
+early, and one forced mock fallback failed risk before logging. The REPLAY smoke therefore uses a
+representative decrypted dry-run fixture with the same payload shape.
 
 ## Hard Rules To Preserve
 

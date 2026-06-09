@@ -12,7 +12,8 @@
     "contract:test": "forge test",
     "deploy:flight-recorder": "scripts/deploy-flight-recorder.sh",
     "demo:toy": "tsx examples/toy-agent.ts",
-    "smoke:evm": "tsx scripts/live-evm-smoke.ts"
+    "smoke:evm": "tsx scripts/live-evm-smoke.ts",
+    "smoke:meridian": "tsx scripts/meridian-replay-smoke.ts"
   },
   "dependencies": {
     "viem": "^2.21.0",

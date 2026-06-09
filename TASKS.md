@@ -37,10 +37,11 @@
       a LIVE hash-vs-anchor check.
       GATE: scrubbing a real MERIDIAN run feels instant (packets pre-loaded); verify badge
       flips red on a tampered fixture.
-- [x] Fork & replay: edit-prompt modal → re-run LLM call; re-simulate tx via eth_call pinned
-      to the step's blockNumber → side-by-side diff view.
-      GATE: the PRD §7 demo moment works end-to-end on the MERIDIAN run: changed risk param →
-      visibly different decision.
+- [x] Fork & replay: edit-inputs modal → DETERMINISTIC re-execution of the agent's decision
+      logic (no LLM, no eth_call — descoped 2026-06-09 audit, PRD §3 updated) → side-by-side diff.
+      GATE (as passed): changed risk param on the MERIDIAN run → visibly different decision.
+      NOTE: original gate text claimed LLM re-run + historical eth_call; that was never built.
+      If re-added, it's a NEW task with its own gate — do not silently expand this one.
 - [ ] Public deploy (Tencent serverless via gaslight's script patterns; Vercel fallback).
       GATE: public URL on a phone.
 

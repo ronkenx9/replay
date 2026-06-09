@@ -34,8 +34,9 @@
   nav{position:fixed;top:0;left:0;right:0;z-index:40;height:68px;background:rgba(5,5,5,.6);backdrop-filter:blur(16px);border-bottom:1px solid transparent;transition:border-color .5s var(--ease)}
   nav.on{border-color:var(--line)}
   nav .wrap{display:flex;align-items:center;justify-content:space-between;height:100%}
-  .logo{font-family:var(--disp);font-weight:700;letter-spacing:.16em;font-size:1rem;color:var(--t1);text-decoration:none;display:flex;align-items:center;gap:.7rem}
-  .logo i{width:9px;height:9px;background:var(--rec);animation:blink 1.7s steps(1) infinite}
+  .logo{display:inline-flex;align-items:center;text-decoration:none;height:38px}
+  .logo img{height:100%;width:auto;filter:invert(1) hue-rotate(180deg) saturate(1.6) brightness(1.05);transition:opacity .3s var(--ease)}
+  .logo:hover img{opacity:.85}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.18}}
   nav ul{display:flex;gap:2.4rem;list-style:none}
   nav ul a{font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--t3);text-decoration:none;transition:color .3s var(--ease)}
@@ -58,10 +59,7 @@
   .hero .bg{position:absolute;inset:0;z-index:0;background-image:url('assets/hero-character.png');background-size:cover;background-position:75% center;background-repeat:no-repeat;will-change:transform}
   /* heavy multilayer mask: blend grey studio into #050505, push copy column solid */
   .hero .mask{position:absolute;inset:0;z-index:1;background:
-    linear-gradient(90deg, #050505 0%, rgba(5,5,5,.95) 28%, rgba(5,5,5,.55) 45%, rgba(5,5,5,.05) 62%, rgba(5,5,5,.4) 95%, #050505 100%),
-    radial-gradient(ellipse 90% 60% at 50% 100%, #050505 0%, transparent 60%),
-    radial-gradient(ellipse 80% 50% at 50% 0%, #050505 0%, transparent 55%)}
-  .hero .mask::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 50% 40% at 80% 40%, rgba(255,90,31,.12), transparent 60%);mix-blend-mode:screen}
+    linear-gradient(90deg, #050505 0%, rgba(5,5,5,.9) 22%, rgba(5,5,5,.35) 38%, transparent 55%, transparent 100%)}
   .hero .wrap{position:relative;z-index:2;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding-top:8rem;padding-bottom:4rem;max-width:1400px}
   .hero .copy{max-width:38rem}
   .chip-eyebrow{display:inline-flex;align-items:center;gap:.55rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--t1);border:1px solid var(--line2);background:rgba(255,255,255,.04);padding:.5rem .9rem;margin-bottom:2.2rem}
@@ -232,7 +230,7 @@
 
 <nav id="nav">
   <div class="wrap">
-    <a class="logo" href="#"><i></i>REPLAY</a>
+    <a class="logo" href="#" aria-label="REPLAY"><img src="assets/logo.png" alt="REPLAY" /></a>
     <ul>
       <li><a href="#scrub">Scrub</a></li>
       <li><a href="#evidence">Evidence</a></li>
@@ -248,7 +246,6 @@
   <div class="mask"></div>
   <div class="wrap">
     <div class="copy">
-      <span class="chip-eyebrow"><i></i>REC <b>·</b> live on Mantle</span>
       <h1>
         <span class="ln"><span>Your agent did</span></span>
         <span class="ln"><span>something <span class="w">weird</span>.</span></span>

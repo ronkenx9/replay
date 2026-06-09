@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-06-09T20:45:00.000Z",
+  "tx_id": "gl-replay-demo-0001",
+  "tx_type": "dex_swap",
+  "upstream_agent": "meridian-agent",
+  "original_gas_estimate": "250000",
+  "optimized_gas_used": "118400",
+  "gas_saved_percent": 52.6,
+  "mnt_saved": "0.0012",
+  "timing": {
+    "received_at": "2026-06-09T20:44:45.000Z",
+    "gas_at_receipt": "0.052 gwei",
+    "submitted_at": "2026-06-09T20:45:00.000Z",
+    "gas_at_submit": "0.041 gwei",
+    "wait_seconds": 15,
+    "recommendation_followed": "wait"
+  },
+  "mev_assessment": {
+    "risk_score": 22,
+    "recommendation": "safe",
+    "reasoning": "Swap amount is below pool risk threshold. No private route required."
+  },
+  "batched": false,
+  "outcome": "confirmed",
+  "block": 39744123,
+  "tx_hash": "0x0000000000000000000000000000000000000000000000000000000000001234"
+}

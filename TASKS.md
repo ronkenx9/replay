@@ -28,7 +28,7 @@
 - [x] Instrument MERIDIAN: adapt its ledger JSONL output → Evidence Packets; replay one full
       rebalance cycle (dry-run) through REPLAY.
       GATE: meridian run produces ≥4 anchored, verifiable steps (signals→risk→proposal→receipt).
-- [ ] Instrument gaslight's audit logger the same way (cheap — same JSONL shape).
+- [x] Instrument gaslight's audit logger the same way (cheap — same JSONL shape).
       GATE: one gaslight optimization recorded. (CUT-FIRST if behind.)
 
 ## Phase 3 — Time-travel viewer (1 day — the judged surface)

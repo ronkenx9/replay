@@ -22,7 +22,7 @@
       (fail-closed proof, on camera later).
 
 ## Phase 2 — Capture SDK + instrument the demo clients (½ day)
-- [ ] `src/sdk.ts`: `createReplay({walletClient, runId})` → `.record(packet)`, `.wrap(llmCall)`.
+- [x] `src/sdk.ts`: `createReplay({walletClient, runId})` → `.record(packet)`, `.wrap(llmCall)`.
       6-line quickstart documented as written.
       GATE: fresh script instruments a toy agent in ≤6 lines, packets anchored.
 - [ ] Instrument MERIDIAN: adapt its ledger JSONL output → Evidence Packets; replay one full

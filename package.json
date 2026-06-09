@@ -10,7 +10,8 @@
     "test": "vitest run",
     "lint": "tsc --noEmit",
     "contract:test": "forge test",
-    "deploy:flight-recorder": "scripts/deploy-flight-recorder.sh"
+    "deploy:flight-recorder": "scripts/deploy-flight-recorder.sh",
+    "demo:toy": "tsx examples/toy-agent.ts"
   },
   "dependencies": {
     "viem": "^2.21.0",

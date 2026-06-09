@@ -13,39 +13,38 @@ contract FlightRecorder {
         address recorder;
     }
 
-    /// keccak256(recorder, runId, stepIndex) => anchor
+    /// keccak256(recorder, runId, seq) => anchor
     mapping(bytes32 => Anchor) private anchors;
 
-    event StepAnchored(
-        address indexed recorder,
-        bytes32 indexed runId,
-        uint256 stepIndex,
-        bytes32 contentHash,
-        string agentId
-    );
+    event StepAnchored(address indexed recorder, bytes32 indexed runId, uint256 indexed seq, bytes32 packetHash);
 
     error AlreadyAnchored();
     error NotFound();
 
-    function key(address recorder, bytes32 runId, uint256 stepIndex) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(recorder, runId, stepIndex));
+    function key(address recorder, bytes32 runId, uint256 seq) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(recorder, runId, seq));
     }
 
-    /// @notice Anchor one step's content hash. Write-once per (sender, runId, stepIndex).
-    function anchorStep(bytes32 runId, uint256 stepIndex, bytes32 contentHash, string calldata agentId) external {
-        bytes32 k = key(msg.sender, runId, stepIndex);
+    /// @notice Anchor one step's content hash. Write-once per (sender, runId, seq).
+    function anchor(bytes32 runId, uint256 seq, bytes32 packetHash) external {
+        bytes32 k = key(msg.sender, runId, seq);
         if (anchors[k].atBlock != 0) revert AlreadyAnchored();
-        anchors[k] = Anchor({ contentHash: contentHash, atBlock: uint64(block.number), recorder: msg.sender });
-        emit StepAnchored(msg.sender, runId, stepIndex, contentHash, agentId);
+        anchors[k] = Anchor({ contentHash: packetHash, atBlock: uint64(block.number), recorder: msg.sender });
+        emit StepAnchored(msg.sender, runId, seq, packetHash);
     }
 
     /// @notice Read an anchored hash back. Reverts if absent.
-    function getAnchor(address recorder, bytes32 runId, uint256 stepIndex)
-        external
+    function getAnchor(bytes32 runId, uint256 seq) external view returns (bytes32 contentHash, uint64 atBlock) {
+        return getAnchorFor(msg.sender, runId, seq);
+    }
+
+    /// @notice Read an anchor for a known recorder address, used by SDK verifiers.
+    function getAnchorFor(address recorder, bytes32 runId, uint256 seq)
+        public
         view
         returns (bytes32 contentHash, uint64 atBlock)
     {
-        Anchor memory a = anchors[key(recorder, runId, stepIndex)];
+        Anchor memory a = anchors[key(recorder, runId, seq)];
         if (a.atBlock == 0) revert NotFound();
         return (a.contentHash, a.atBlock);
     }

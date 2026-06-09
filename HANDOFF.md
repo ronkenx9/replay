@@ -1,25 +1,28 @@
 # REPLAY Handoff
 
-Last updated: 2026-06-09 20:00 Africa/Lagos.
+Last updated: 2026-06-09 20:05 Africa/Lagos.
 
 ## Current State
 
-Phase 0 is complete and committed as the baseline port:
+Phase 0 is complete and committed as the baseline port. Phase 1 local contract tests are also
+passing, but Phase 1 is not complete until Mantle Sepolia deploy + explorer verification are done.
 
 - `src/core/recorder.ts` — EVM-shaped BOUND blackbox recorder port.
 - `src/core/evidence.ts` — Evidence Packet layer and commitment proof helpers.
 - `src/backends/memory.ts` — no-wallet in-memory backend for tests and judge fresh-clone mode.
 - `src/chains.ts` — Mantle + Mantle Sepolia config; Sepolia is pinned to `5003`.
-- `contracts/FlightRecorder.sol` — draft anchor contract already present, not yet tested/deployed.
+- `contracts/FlightRecorder.sol` — anchor contract with task-plan API: `anchor(runId, seq, packetHash)`, `getAnchor(runId, seq)`, `getAnchorFor(recorder, runId, seq)`.
+- `test/FlightRecorder.t.sol` + `foundry.toml` — Foundry contract tests.
 
 Verification already run:
 
 ```bash
 npm test
 npm run build
+forge test
 ```
 
-Both passed on 2026-06-09. `npm install` reports 5 audit findings from transitive packages; do not broad-upgrade during a gated phase unless you can rerun all tests.
+All passed on 2026-06-09. `npm install` reports 5 audit findings from transitive packages; do not broad-upgrade during a gated phase unless you can rerun all tests.
 
 ## What Changed In Phase 0
 
@@ -29,18 +32,17 @@ Both passed on 2026-06-09. `npm install` reports 5 audit findings from transitiv
 
 ## Next Task
 
-Start `TASKS.md` Phase 1, first unchecked item:
+Continue `TASKS.md` Phase 1, first unchecked item:
 
-1. Add contract test tooling for `contracts/FlightRecorder.sol`.
-2. Test:
-   - `anchorStep` writes one anchor.
-   - `getAnchor` returns the hash and block.
-   - duplicate `(sender, runId, stepIndex)` reverts.
-   - another sender can use the same `runId` + `stepIndex` without collision.
-3. Only after local contract tests pass, deploy to Mantle Sepolia `5003`.
-4. Verify contract on explorer and record the address in `CLAUDE.md`.
+Local tests are done. Next steps:
 
-Suggested lightweight path: use Foundry if available; otherwise add Hardhat. Keep the contract surface minimal and do not refactor the recorder during Phase 1.
+1. Deploy `contracts/FlightRecorder.sol` to Mantle Sepolia `5003`.
+2. Verify the contract on the Mantle Sepolia explorer.
+3. Record the verified address in `CLAUDE.md`.
+4. Add `src/backends/evm.ts` and make record→verify read back from the verified contract.
+5. Run the live tamper roundtrip gate: record a packet, verify green, tamper local blob, verify red.
+
+Do not mark Phase 1 complete until the live deploy/verify gate passes.
 
 ## Hard Rules To Preserve
 
@@ -58,4 +60,3 @@ npm test
 npm run build
 git status --short
 ```
-

@@ -16,6 +16,7 @@ if (!privateKey) throw new Error("Missing MANTLE_PRIVATE_KEY or PRIVATE_KEY.");
 if (!contractAddress) throw new Error("Missing FLIGHT_RECORDER_ADDRESS.");
 
 const report = JSON.parse(await readFile(fixturePath, "utf8")) as GaslightOptimizationReport;
+report.tx_id = `${report.tx_id}-${Date.now()}`;
 const packets = gaslightReportToPackets(report);
 
 const account = privateKeyToAccount(privateKey as `0x${string}`);

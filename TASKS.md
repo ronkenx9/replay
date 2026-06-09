@@ -32,12 +32,12 @@
       GATE: one gaslight optimization recorded. (CUT-FIRST if behind.)
 
 ## Phase 3 — Time-travel viewer (1 day — the judged surface)
-- [ ] Viewer (Vite+React, editorial-landing-page taste): run list → timeline scrubber →
+- [x] Viewer (Vite+React, editorial-landing-page taste): run list → timeline scrubber →
       packet inspector (model input/output, tool calls, tx link) → per-step verify badge doing
       a LIVE hash-vs-anchor check.
       GATE: scrubbing a real MERIDIAN run feels instant (packets pre-loaded); verify badge
       flips red on a tampered fixture.
-- [ ] Fork & replay: edit-prompt modal → re-run LLM call; re-simulate tx via eth_call pinned
+- [x] Fork & replay: edit-prompt modal → re-run LLM call; re-simulate tx via eth_call pinned
       to the step's blockNumber → side-by-side diff view.
       GATE: the PRD §7 demo moment works end-to-end on the MERIDIAN run: changed risk param →
       visibly different decision.

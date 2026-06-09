@@ -16,6 +16,7 @@ if (!privateKey) throw new Error("Missing MANTLE_PRIVATE_KEY or PRIVATE_KEY.");
 if (!contractAddress) throw new Error("Missing FLIGHT_RECORDER_ADDRESS.");
 
 const decision = JSON.parse(await readFile(fixturePath, "utf8")) as MeridianDecisionLog;
+decision.cycle_id = `${decision.cycle_id}-${Date.now()}`;
 const packets = meridianDecisionToPackets(decision);
 if (packets.length < 4) throw new Error(`Expected at least 4 packets, got ${packets.length}.`);
 

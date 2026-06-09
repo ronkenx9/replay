@@ -157,7 +157,7 @@ export function createEvmBackend(options: EvmBackendOptions): Backend {
       });
       const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
 
-      return {
+      const anchorResult = {
         anchorRef: anchorRef({
           chainId: chainId(publicClient),
           contractAddress,
@@ -168,6 +168,15 @@ export function createEvmBackend(options: EvmBackendOptions): Backend {
         txHash: receipt.transactionHash,
         verifyUrl: txUrl(publicClient, receipt.transactionHash),
       };
+
+      try {
+        const receiptPath = join(packetDir, `${contentHash}.receipt.json`);
+        await writeFile(receiptPath, JSON.stringify(anchorResult, null, 2), "utf8");
+      } catch (err) {
+        // ignore write failures
+      }
+
+      return anchorResult;
     },
 
     async readAnchor(ref) {

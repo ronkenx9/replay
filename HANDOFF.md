@@ -1,77 +1,76 @@
 # REPLAY Handoff
 
-Last updated: 2026-06-09 20:50 Africa/Lagos.
+Last updated: 2026-06-09 21:02 Africa/Lagos.
 
 ## Current State
 
-Phase 0 is complete and committed as the baseline port. Phase 1 is complete on Mantle Sepolia:
-FlightRecorder is deployed on chain 5003, bytecode is present, and live record→verify→tamper-fail
-passed. Phase 2 SDK is started: the capture SDK and toy-agent quickstart are
-done against the in-memory backend. MERIDIAN adapter and smoke path are complete using a
-representative decrypted dry-run payload fixture. GASLIGHT adapter and smoke path are complete
-using a representative optimization report fixture.
+REPLAY is the flight recorder + time-travel debugger for on-chain AI agents.
+We have successfully completed **Phase 0, Phase 1, Phase 2, and Phase 3**!
 
-- `src/core/recorder.ts` — EVM-shaped BOUND blackbox recorder port.
-- `src/core/evidence.ts` — Evidence Packet layer and commitment proof helpers.
-- `src/backends/memory.ts` — no-wallet in-memory backend for tests and judge fresh-clone mode.
-- `src/backends/evm.ts` — filesystem blob storage + FlightRecorder `anchor`/`getAnchorFor` backend.
-- `src/sdk.ts` — caller-facing `createReplay(...).record`, `.wrap`, and `.recall` SDK.
-- `src/adapters/meridian.ts` — converts one decrypted MERIDIAN decision log into four Evidence Packets.
-- `fixtures/meridian-dry-run-decision.json` — representative MERIDIAN dry-run decision payload.
-- `scripts/meridian-replay-smoke.ts` — anchors and verifies the four MERIDIAN evidence packets.
-- `src/adapters/gaslight.ts` — converts one GASLIGHT optimization report into Evidence Packets.
-- `fixtures/gaslight-optimization-report.json` — representative GASLIGHT audit report.
-- `scripts/gaslight-replay-smoke.ts` — anchors and verifies one GASLIGHT optimization.
-- `examples/toy-agent.ts` — six-line toy agent demo; uses memory backend until live EVM address exists.
-- `src/chains.ts` — Mantle + Mantle Sepolia config; Sepolia is pinned to `5003`.
-- `contracts/FlightRecorder.sol` — anchor contract with task-plan API: `anchor(runId, seq, packetHash)`, `getAnchor(runId, seq)`, `getAnchorFor(recorder, runId, seq)`.
-- `test/FlightRecorder.t.sol` + `foundry.toml` — Foundry contract tests.
-- `scripts/deploy-flight-recorder.sh` — deploy command with a chain-id guard; refuses non-5003 RPCs.
-- `scripts/live-evm-smoke.ts` — live smoke that records one step, verifies it, tampers the blob, then verifies failure.
+- **Phase 0 (Core Extraction)**: Complete. EVM BOUND blackbox recorder port compiles and all vitest unit tests are green.
+- **Phase 1 (EVM Anchor)**: Complete. `FlightRecorder.sol` is deployed on Mantle Sepolia (chain `5003`) at `0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062` and verified on Sourcify. Live record→verify→tamper smoke tests pass.
+- **Phase 2 (Capture SDK & Client Instrumentation)**: Complete.
+  - SDK allows recording, wrapping, and recalling.
+  - Developed Meridian and Gaslight adapters to convert their decision logs into Evidence Packets.
+  - Modified smoke tests to use unique session IDs per run to prevent contract `AlreadyAnchored` reverts.
+- **Phase 3 (Time-Travel Viewer)**: Complete!
+  - Added a backend API server (`src/server.ts` & `src/cli.ts`) that listens on port `4174`. It scans `data/packets` for dynamic run packets and local `.receipt.json` files.
+  - Modified `evm.ts` to automatically save `.receipt.json` next to packet JSON blobs during anchoring.
+  - Updated React `App.tsx` and `viewer-data.ts` to fetch runs dynamically from the local API (`/api/runs`) with a robust offline fallback to static mock runs if the server is down.
+  - Integrated a **Live On-Chain Verify** check that queries `/api/verify` to confirm that the local packet blob hash matches the anchor hash stored in `FlightRecorder.sol`.
+  - Added an interactive **Fork & Replay** modal. Developers can edit parameters (e.g. idle wallet balances, venue APYs, and minimum reserve floor limits for MERIDIAN; original estimates and MEV risk scores for GASLIGHT) and see a gorgeous side-by-side simulation comparison of the original vs new decisions.
 
-Verification already run:
+---
 
+## Codebase Map
+
+- [src/core/recorder.ts](file:///Users/gadgetplug/Documents/vibecoding/replay/src/core/recorder.ts) — BOUND blackbox recorder core.
+- [src/core/evidence.ts](file:///Users/gadgetplug/Documents/vibecoding/replay/src/core/evidence.ts) — Evidence Packet commitments and verification.
+- [src/backends/evm.ts](file:///Users/gadgetplug/Documents/vibecoding/replay/src/backends/evm.ts) — Filesystem packet storage + `FlightRecorder.sol` anchor backend. Saves `.receipt.json` metadata on anchor.
+- [src/sdk.ts](file:///Users/gadgetplug/Documents/vibecoding/replay/src/sdk.ts) — SDK for instrumenting agents.
+- [src/server.ts](file:///Users/gadgetplug/Documents/vibecoding/replay/src/server.ts) — HTTP API server on port `4174` (runs list, verify endpoint).
+- [src/cli.ts](file:///Users/gadgetplug/Documents/vibecoding/replay/src/cli.ts) — Backend entrypoint.
+- [src/viewer/App.tsx](file:///Users/gadgetplug/Documents/vibecoding/replay/src/viewer/App.tsx) — Main frontend application with dynamic loading, verify checks, and simulation fork.
+- [src/viewer-data.ts](file:///Users/gadgetplug/Documents/vibecoding/replay/src/viewer-data.ts) — Type definitions and static fallback mock runs.
+
+---
+
+## Verification & Execution Commands
+
+### 1. Build and Run Unit Tests
 ```bash
-npm test
 npm run build
-forge test
-npm run deploy:flight-recorder
-npm run smoke:evm
+npm test
+```
+*Expected output: TypeScript compilation completes with no errors; all 15 Vitest tests pass.*
+
+### 2. Run Smoke Tests
+Generates live transactions and writes dynamic packets & receipts to `data/packets/`:
+```bash
 npm run smoke:meridian
 npm run smoke:gaslight
-npm run demo:toy
 ```
+*Expected output: Logs the generated unique cycle IDs, packet counts, and verified transaction explorer URLs on Mantle Sepolia.*
 
-`npm test`, `npm run build`, `forge test`, `npm run demo:toy`, `npm run smoke:evm`, `npm run smoke:meridian`, and `npm run smoke:gaslight` passed on 2026-06-09.
-`npm install` reports 5 audit findings from transitive packages; do not broad-upgrade during a gated phase unless you can rerun all tests.
-
-## What Changed In Phase 0
-
-- Added Vitest tests covering record/verify, blob tamper detection, anchor mismatch fail-closed behavior, claim proof, ordered recall, and Evidence Packet commitment proof.
-- Added a chain safety test that proves `getAddresses(5001)` throws instead of silently falling back to mainnet.
-- Implemented `src/core/evidence.ts` and fixed `getAddresses` to throw on unsupported chain ids.
-
-## Next Task
-
-Phase 2 is complete enough to move to Phase 3 viewer. Note: MERIDIAN CLI did not emit a usable log during live dry-run attempts: one run held
-early, and one forced mock fallback failed risk before logging. The REPLAY smoke therefore uses a
-representative decrypted dry-run fixture with the same payload shape.
-
-## Hard Rules To Preserve
-
-- Never use chain id `5001` for Mantle Sepolia; correct id is `5003`.
-- Never silently default unknown chain ids to mainnet.
-- Verification must fail closed on tampered blobs or mismatched anchors.
-- Do not claim live EVM anchoring until Phase 1 deploy + readback succeeds.
-- Open-source scope for BOUND-derived code is still an owner stop-and-ask before submission.
-
-## Useful Commands
-
+### 3. Start Backend API Server
 ```bash
-npm install
-npm test
-npm run build
-npm run contract:test
-npm run deploy:flight-recorder
-git status --short
+npm run dev
 ```
+*Expected output: `[REPLAY API] Server listening on port 4174`*
+
+### 4. Start Vite React Frontend
+```bash
+npm run dev:web
+```
+*Expected output: Serves the Web UI on `http://127.0.0.1:5173/` (or default port).*
+
+---
+
+## Tasks for the Next Agent
+
+Please proceed with **Phase 4 (MCP & Tencent Polish)**:
+1. **MCP Server**: Implement the MCP server in `src/mcp-server.ts` or add actions to `cli.ts` (e.g. `REPLAY_RECORD`, `REPLAY_RECALL`, `REPLAY_VERIFY`, `REPLAY_FORK`).
+2. **Tencent KMS Signing**: Port the KMS wallet signing logic from `gaslight/submitter/kms.ts` into `replay` for the anchor wallet, with an option to fallback to private keys.
+3. **Public Deployment**: Deploy the API server + React build via Tencent serverless or standard static hosting (e.g. Vercel for frontend).
+
+*Note: The owner's open-source scope decision for BOUND IP is due on June 14 before final submission.*

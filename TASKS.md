@@ -3,12 +3,12 @@
 > Rules: ~/brain/skills/hackathon-execution-framework.md. Gates blocking, commit per task.
 
 ## Phase 0 — Core extraction (½ day, HARD TIMEBOX)
-- [ ] Copy `bound/src/blackbox/{recorder,evidence,memory-backend}.ts` → `src/core/`. Strip
+- [x] Copy `bound/src/blackbox/{recorder,evidence,memory-backend}.ts` → `src/core/`. Strip
       Sui/Walrus imports; keep the DI seams and Evidence Packet schema intact. Do NOT refactor
       beyond what compiles — port first, improve never (hackathon rule).
       GATE: `npm test` green with ported BOUND tests against the in-memory backend.
       TIMEBOX: if not green in ½ day, stop → reimplement schema-only from evidence.ts → note in journal.
-- [ ] Scaffold: meridian-pattern package.json/tsconfig, chains.ts (5003-fixed copy).
+- [x] Scaffold: meridian-pattern package.json/tsconfig, chains.ts (5003-fixed copy).
       GATE: build green.
 
 ## Phase 1 — EVM anchor (½ day)

@@ -60,7 +60,7 @@
   /* heavy multilayer mask: blend grey studio into #050505, push copy column solid */
   .hero .mask{position:absolute;inset:0;z-index:1;background:
     linear-gradient(90deg, #050505 0%, rgba(5,5,5,.9) 22%, rgba(5,5,5,.35) 38%, transparent 55%, transparent 100%)}
-  .hero .wrap{position:relative;z-index:2;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding-top:8rem;padding-bottom:4rem;max-width:1400px}
+  .hero .wrap{position:relative;z-index:2;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding-top:6rem;padding-bottom:4rem;max-width:1400px}
   .hero .copy{max-width:38rem}
   .chip-eyebrow{display:inline-flex;align-items:center;gap:.55rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--t1);border:1px solid var(--line2);background:rgba(255,255,255,.04);padding:.5rem .9rem;margin-bottom:2.2rem}
   .chip-eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--rec);animation:blink 1.5s steps(1) infinite}
@@ -103,10 +103,10 @@
   .sstop{position:absolute;top:0}
   .sstop .pt{position:absolute;top:24px;width:9px;height:9px;background:var(--bg);border:1px solid var(--t3);transform:rotate(45deg);transition:background .3s var(--ease),border-color .3s var(--ease)}
   .sstop .lb{position:absolute;top:50px;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);white-space:nowrap;transition:color .3s var(--ease)}
-  .sstop.on .pt{background:var(--rec);border-color:var(--rec)}
+  .sstop.on .pt{background:var(--rec);border-color:var(--rec);box-shadow:0 0 8px rgba(255,90,31,.6)}
   .sstop.on .lb{color:var(--t1)}
   .sstop.last .pt{border-color:var(--proof)}
-  .sstop.last.on .pt{background:var(--proof);border-color:var(--proof)}
+  .sstop.last.on .pt{background:var(--proof);border-color:var(--proof);box-shadow:0 0 8px rgba(54,209,125,.6)}
   .scard-shell{background:var(--shell);border:1px solid var(--line);padding:7px;max-width:46rem}
   .scard{background:var(--core);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);position:relative;min-height:9rem;font-family:var(--mono)}
   .scard .tag{position:absolute;top:-1px;left:-1px;background:var(--rec);color:#050505;font-size:.58rem;letter-spacing:.18em;padding:.34rem .85rem}

@@ -7,13 +7,15 @@ Last updated: 2026-06-09 20:10 Africa/Lagos.
 Phase 0 is complete and committed as the baseline port. Phase 1 local contract tests and the
 EVM backend are passing, but Phase 1 is not complete until Mantle Sepolia deploy + explorer
 verification are done. Phase 2 SDK is started: the capture SDK and toy-agent quickstart are
-done against the in-memory backend.
+done against the in-memory backend. MERIDIAN adapter is implemented as a pure decrypted-log
+converter, but the actual MERIDIAN dry-run gate is not complete yet.
 
 - `src/core/recorder.ts` — EVM-shaped BOUND blackbox recorder port.
 - `src/core/evidence.ts` — Evidence Packet layer and commitment proof helpers.
 - `src/backends/memory.ts` — no-wallet in-memory backend for tests and judge fresh-clone mode.
 - `src/backends/evm.ts` — filesystem blob storage + FlightRecorder `anchor`/`getAnchorFor` backend.
 - `src/sdk.ts` — caller-facing `createReplay(...).record`, `.wrap`, and `.recall` SDK.
+- `src/adapters/meridian.ts` — converts one decrypted MERIDIAN decision log into four Evidence Packets.
 - `examples/toy-agent.ts` — six-line toy agent demo; uses memory backend until live EVM address exists.
 - `src/chains.ts` — Mantle + Mantle Sepolia config; Sepolia is pinned to `5003`.
 - `contracts/FlightRecorder.sol` — anchor contract with task-plan API: `anchor(runId, seq, packetHash)`, `getAnchor(runId, seq)`, `getAnchorFor(recorder, runId, seq)`.
@@ -54,7 +56,8 @@ Local tests are done. Next steps:
 
 Do not mark Phase 1 complete until the live deploy/verify gate passes.
 
-After that, continue Phase 2 by instrumenting MERIDIAN's dry-run JSONL into Evidence Packets.
+After that, continue Phase 2 by running MERIDIAN dry-run and feeding the decrypted decision
+payload into `meridianDecisionToPackets(...)`. The adapter is tested; the real-run bridge is not.
 
 ## Hard Rules To Preserve
 

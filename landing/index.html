@@ -179,16 +179,15 @@
   .trip{margin:2.4rem 0 3rem;border-left:2px solid var(--rec);padding-left:1.7rem;max-width:36rem;display:grid;gap:.55rem;font-size:1rem}
   .trip b{color:var(--t1);font-weight:500}
   .close-sec .cta{display:flex;gap:1rem;flex-wrap:wrap}
-  /* brand plate (a deliberate, one-time cream moment) */
-  .brand-plate{margin-top:5rem;background:#F5F2EA;color:#050505;padding:2.4rem clamp(1.5rem,3vw,3rem);display:grid;grid-template-columns:1fr auto;align-items:center;gap:2rem;max-width:1200px;border:1px solid #DDD9CE}
-  .brand-plate img{width:170px;height:auto;mix-blend-mode:multiply}
-  .brand-plate p{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:#3a3a3a}
-  .brand-plate p b{color:#050505;font-weight:500}
-
-  footer{position:relative;z-index:1;border-top:1px solid var(--line);padding:2.4rem 0;background:var(--bg2)}
-  footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-  footer p,footer a{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);text-decoration:none}
-  footer a:hover{color:var(--rec)}
+  /* brand footer (full-bleed cream moment at page bottom) */
+  .brand-footer{background:#F5F2EA;color:#050505;padding:3.5rem 0;border-top:1px solid #DDD9CE;position:relative;z-index:10}
+  .brand-footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:2rem;flex-wrap:wrap}
+  .brand-footer .brand-left{display:flex;flex-direction:column;gap:0.8rem}
+  .brand-footer .footer-logo{width:140px;height:auto;mix-blend-mode:multiply}
+  .brand-footer p, .brand-footer a{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:#3a3a3a;text-decoration:none}
+  .brand-footer p b{color:#050505;font-weight:500}
+  .brand-footer a{color:#050505;font-weight:500;border-bottom:1px solid rgba(5,5,5,.2);transition:border-color .3s var(--ease)}
+  .brand-footer a:hover{border-color:#050505}
 
   .rv{opacity:0;transform:translateY(34px);filter:blur(8px);transition:opacity .9s var(--ease),transform .9s var(--ease),filter .9s var(--ease)}
   .rv.in{opacity:1;transform:none;filter:none}
@@ -217,8 +216,8 @@
     .sstop .lb{display:none}
     .sstop.active .lb{display:block}
     section{padding:5rem 0}
-    .brand-plate{grid-template-columns:1fr;text-align:center}
-    .brand-plate img{margin:0 auto}
+    .brand-footer .wrap{flex-direction:column;text-align:center;gap:1.5rem}
+    .brand-footer .footer-logo{margin:0 auto}
     .close-sec .bg{background-size:cover;background-position:60% center;opacity:.55}
   }
 </style>
@@ -403,18 +402,19 @@
         <a class="btn primary" href="#sdk">Start recording<span class="chip">↗</span></a>
         <a class="btn" href="https://explorer.sepolia.mantle.xyz/address/0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062" target="_blank" rel="noopener">Inspect the contract<span class="chip">↗</span></a>
       </div>
-      <div class="brand-plate rv">
-        <img src="assets/logo.png" alt="REPLAY" />
-        <p>BUILT ON <b>MANTLE</b> &nbsp;·&nbsp; ANCHORED VIA <b>FLIGHTRECORDER.SOL</b> &nbsp;·&nbsp; <b>SOURCIFY EXACT MATCH</b></p>
-      </div>
     </div>
   </div>
 </section>
 
-<footer>
+<footer class="brand-footer">
   <div class="wrap">
-    <p>REPLAY · the black box for on-chain AI agents</p>
-    <p>FlightRecorder.sol · <a href="https://explorer.sepolia.mantle.xyz/address/0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062" target="_blank" rel="noopener">0x4d46…d062</a> · Mantle Sepolia · Sourcify exact match</p>
+    <div class="brand-left">
+      <img src="assets/logo.png" alt="REPLAY" class="footer-logo" />
+      <p>BUILT ON <b>MANTLE</b> &nbsp;·&nbsp; ANCHORED VIA <b>FLIGHTRECORDER.SOL</b> &nbsp;·&nbsp; <b>SOURCIFY EXACT MATCH</b></p>
+    </div>
+    <div class="brand-right">
+      <p>FlightRecorder.sol · <a href="https://explorer.sepolia.mantle.xyz/address/0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062" target="_blank" rel="noopener">0x4d46…d062 ↗</a> · Sourcify exact match</p>
+    </div>
   </div>
 </footer>
 

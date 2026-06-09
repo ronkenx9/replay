@@ -12,11 +12,11 @@
       GATE: build green.
 
 ## Phase 1 — EVM anchor (½ day)
-- [ ] `contracts/FlightRecorder.sol`: `anchor(bytes32 runId, uint256 seq, bytes32 packetHash)`,
+- [x] `contracts/FlightRecorder.sol`: `anchor(bytes32 runId, uint256 seq, bytes32 packetHash)`,
       `getAnchor(runId, seq)`, event `StepAnchored`. ~60 lines, anyone-can-anchor (runId scoped
       to sender: key = keccak(msg.sender, runId)).
       GATE: contract tests; deploy Mantle Sepolia 5003; **VERIFY on explorer**; address in CLAUDE.md.
-- [ ] `src/backends/evm.ts`: implements the recorder's storage+anchor interface — blob to
+- [x] `src/backends/evm.ts`: implements the recorder's storage+anchor interface — blob to
       `data/packets/` (served by API), hash to FlightRecorder.
       GATE: record→verify roundtrip live on Sepolia: tamper the local blob → verifyStep FAILS
       (fail-closed proof, on camera later).

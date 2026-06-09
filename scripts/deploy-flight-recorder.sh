@@ -24,6 +24,7 @@ if [[ "$ACTUAL_CHAIN_ID" != "$EXPECTED_CHAIN_ID" ]]; then
 fi
 
 forge create \
+  --broadcast \
   --rpc-url "$RPC_URL" \
   --private-key "$PRIVATE_KEY" \
   contracts/FlightRecorder.sol:FlightRecorder

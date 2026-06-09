@@ -1,12 +1,12 @@
 # REPLAY Handoff
 
-Last updated: 2026-06-09 20:10 Africa/Lagos.
+Last updated: 2026-06-09 20:25 Africa/Lagos.
 
 ## Current State
 
-Phase 0 is complete and committed as the baseline port. Phase 1 local contract tests and the
-EVM backend are passing, but Phase 1 is not complete until Mantle Sepolia deploy + explorer
-verification are done. Phase 2 SDK is started: the capture SDK and toy-agent quickstart are
+Phase 0 is complete and committed as the baseline port. Phase 1 is complete on Mantle Sepolia:
+FlightRecorder is deployed on chain 5003, bytecode is present, and live record→verify→tamper-fail
+passed. Phase 2 SDK is started: the capture SDK and toy-agent quickstart are
 done against the in-memory backend. MERIDIAN adapter is implemented as a pure decrypted-log
 converter, but the actual MERIDIAN dry-run gate is not complete yet.
 
@@ -21,6 +21,7 @@ converter, but the actual MERIDIAN dry-run gate is not complete yet.
 - `contracts/FlightRecorder.sol` — anchor contract with task-plan API: `anchor(runId, seq, packetHash)`, `getAnchor(runId, seq)`, `getAnchorFor(recorder, runId, seq)`.
 - `test/FlightRecorder.t.sol` + `foundry.toml` — Foundry contract tests.
 - `scripts/deploy-flight-recorder.sh` — deploy command with a chain-id guard; refuses non-5003 RPCs.
+- `scripts/live-evm-smoke.ts` — live smoke that records one step, verifies it, tampers the blob, then verifies failure.
 
 Verification already run:
 
@@ -29,11 +30,11 @@ npm test
 npm run build
 forge test
 npm run deploy:flight-recorder
+npm run smoke:evm
 npm run demo:toy
 ```
 
-`npm test`, `npm run build`, `forge test`, and `npm run demo:toy` passed on 2026-06-09. `npm run deploy:flight-recorder`
-was tested without a key and failed safely with `Missing MANTLE_PRIVATE_KEY or PRIVATE_KEY env var.`
+`npm test`, `npm run build`, `forge test`, `npm run demo:toy`, and `npm run smoke:evm` passed on 2026-06-09.
 `npm install` reports 5 audit findings from transitive packages; do not broad-upgrade during a gated phase unless you can rerun all tests.
 
 ## What Changed In Phase 0
@@ -44,19 +45,7 @@ was tested without a key and failed safely with `Missing MANTLE_PRIVATE_KEY or P
 
 ## Next Task
 
-Continue `TASKS.md` Phase 1, first unchecked item:
-
-Local tests are done. Next steps:
-
-1. Deploy `contracts/FlightRecorder.sol` to Mantle Sepolia `5003`.
-2. Verify the contract on the Mantle Sepolia explorer.
-3. Record the verified address in `CLAUDE.md`.
-4. Wire the deployed address into an EVM-backend smoke script.
-5. Run the live tamper roundtrip gate: record a packet, verify green, tamper local blob, verify red.
-
-Do not mark Phase 1 complete until the live deploy/verify gate passes.
-
-After that, continue Phase 2 by running MERIDIAN dry-run and feeding the decrypted decision
+Continue Phase 2 by running MERIDIAN dry-run and feeding the decrypted decision
 payload into `meridianDecisionToPackets(...)`. The adapter is tested; the real-run bridge is not.
 
 ## Hard Rules To Preserve

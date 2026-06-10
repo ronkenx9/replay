@@ -7,7 +7,7 @@
 <meta name="description" content="REPLAY records every prompt, tool call, and transaction your on-chain AI agent makes, then lets you scrub, verify, and fork the timeline. Anchored on Mantle." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <script src="assets/gsap.min.js"></script>
 <script src="assets/ScrollTrigger.min.js"></script>
 <style>
@@ -16,7 +16,7 @@
     --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.18);
     --t1:#F5F2EA; --t2:#A0A0A8; --t3:#5E5E66;
     --rec:#FF5A1F; --proof:#36D17D; --fork:#3B82F6; --err:#FF3B30;
-    --disp:"Space Grotesk",sans-serif; --body:"Plus Jakarta Sans",sans-serif; --mono:"JetBrains Mono",monospace;
+    --disp:"Unbounded",sans-serif; --body:"Space Grotesk",sans-serif; --mono:"JetBrains Mono",monospace;
     --ease:cubic-bezier(.32,.72,0,1);
   }
   *{margin:0;padding:0;box-sizing:border-box;border-radius:0}
@@ -33,10 +33,10 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
 
   /* nav */
-  nav{position:fixed;top:0;left:0;right:0;z-index:40;height:68px;background:rgba(5,5,5,.6);backdrop-filter:blur(16px);border-bottom:1px solid transparent;transition:border-color .5s var(--ease)}
+  nav{position:fixed;top:0;left:0;right:0;z-index:40;height:76px;background:rgba(5,5,5,.6);backdrop-filter:blur(16px);border-bottom:1px solid transparent;transition:border-color .5s var(--ease)}
   nav.on{border-color:var(--line)}
   nav .wrap{display:flex;align-items:center;justify-content:space-between;height:100%}
-  .logo{display:inline-flex;align-items:center;text-decoration:none;height:38px}
+  .logo{display:inline-flex;align-items:center;text-decoration:none;height:56px}
   .logo img{height:100%;width:auto;filter:invert(1) hue-rotate(180deg) saturate(1.6) brightness(1.05);transition:opacity .3s var(--ease)}
   .logo:hover img{opacity:.85}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.18}}
@@ -292,7 +292,7 @@
     <div class="copy">
       <h1>
         <span class="ln"><span>Your agent did</span></span>
-        <span class="ln"><span>something <span class="w">weird</span>.</span></span>
+        <span class="ln"><span>something weird<span class="w">?</span></span></span>
       </h1>
       <p class="sub fade"><b>Breathe.</b> REPLAY recorded every prompt, tool call, and transaction. Scrub the timeline, verify on Mantle, fork the moment it went sideways.</p>
       <div class="cta fade">

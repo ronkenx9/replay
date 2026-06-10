@@ -15,6 +15,11 @@ async function run() {
   
   const artifactDir = '/Users/gadgetplug/.gemini/antigravity/brain/7ff22e4a-deb5-4953-8ff2-27bea51002cc';
   
+  // 0. Capture Hero Section (Nav bar, Logo, Hero text)
+  console.log('Capturing hero section...');
+  await page.screenshot({ path: path.join(artifactDir, 'hero.png') });
+  console.log('Saved hero.png');
+
   // 1. Capture Horizontal Scrub Cards
   console.log('Scrolling to #scrub start...');
   const scrubTop = await page.evaluate(() => {

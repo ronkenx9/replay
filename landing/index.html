@@ -130,8 +130,17 @@
   /* bento */
   .bento{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:4rem}
   .cell-shell{background:var(--shell);border:1px solid var(--line);padding:7px}
-  .cell{background:var(--core);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:1.8rem;height:100%;display:flex;flex-direction:column;justify-content:space-between;gap:1.4rem;transition:border-color .4s var(--ease)}
-  .cell-shell:hover .cell{border-color:var(--line2)}
+  .cell{position:relative;overflow:hidden;background:var(--core);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:1.8rem;height:100%;transition:border-color .4s var(--ease),box-shadow .4s var(--ease)}
+  .cell-content{display:flex;flex-direction:column;justify-content:space-between;gap:1.4rem;height:100%;opacity:0;transform:translateY(12px);transition:opacity .45s var(--ease),transform .45s var(--ease)}
+  .cell-shell:hover .cell-content{opacity:1;transform:translateY(0)}
+  .cell-placeholder{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .4s var(--ease),transform .4s var(--ease);opacity:1;background:transparent;padding:1.8rem}
+  .cell-shell:hover .cell-placeholder{opacity:0;transform:scale(.94)}
+  .placeholder-text{font-family:var(--disp);font-weight:900;font-size:clamp(1.8rem,3vw,3.2rem);text-transform:uppercase;letter-spacing:.05em;-webkit-text-stroke:1.5px currentColor;color:transparent;text-align:center;line-height:1}
+  .c-packet:hover .cell{border-color:var(--rec);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 20px rgba(255,90,31,.25)}
+  .c-verify:hover .cell{border-color:var(--proof);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 20px rgba(54,209,125,.25)}
+  .c-fork:hover .cell{border-color:var(--fork);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 20px rgba(59,130,246,.25)}
+  .c-mismatch:hover .cell{border-color:var(--err);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 20px rgba(255,59,48,.25)}
+  .c-contract:hover .cell{border-color:var(--rec);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 20px rgba(255,90,31,.25)}
   .c-packet{grid-column:span 7}
   .c-verify{grid-column:span 5}
   .c-fork{grid-column:span 5}
@@ -314,52 +323,67 @@
     <p class="sub rv">One packet per step: hashed, stored, anchored on Mantle the moment it happens. All values below are real.</p>
     <div class="bento">
       <div class="cell-shell c-packet rv"><div class="cell">
-        <div>
-          <span class="pill o">Evidence packet · seq 002</span>
-          <div class="data" style="margin-top:1.3rem">
-            <div><span class="k">agent</span><span class="v">meridian</span></div>
-            <div><span class="k">event</span><span class="v">decision · risk_check</span></div>
-            <div><span class="k">input</span><span class="v">{ idle_usdy: 5000, aave_apy: 4.81, reserve: 12% }</span></div>
-            <div><span class="k">output</span><span class="v">propose MOVE → aave_usdy_supply</span></div>
-            <div><span class="k">hash</span><span class="v">1bdc92ad0cb25d8cfdf228a4b5ceb523a00d…e7a61c</span></div>
+        <div class="cell-placeholder"><span class="placeholder-text" style="color: var(--rec)">Evidence</span></div>
+        <div class="cell-content">
+          <div>
+            <span class="pill o">Evidence packet · seq 002</span>
+            <div class="data" style="margin-top:1.3rem">
+              <div><span class="k">agent</span><span class="v">meridian</span></div>
+              <div><span class="k">event</span><span class="v">decision · risk_check</span></div>
+              <div><span class="k">input</span><span class="v">{ idle_usdy: 5000, aave_apy: 4.81, reserve: 12% }</span></div>
+              <div><span class="k">output</span><span class="v">propose MOVE → aave_usdy_supply</span></div>
+              <div><span class="k">hash</span><span class="v">1bdc92ad0cb25d8cfdf228a4b5ceb523a00d…e7a61c</span></div>
+            </div>
           </div>
+          <p>What the agent saw, what it answered, what it called, what it signed.</p>
         </div>
-        <p>What the agent saw, what it answered, what it called, what it signed.</p>
       </div></div>
       <div class="cell-shell c-verify rv"><div class="cell">
-        <div>
-          <span class="pill g">Verified</span>
-          <h3 style="margin-top:1.1rem">Hash matches the on-chain anchor.</h3>
-          <p>Re-fetched, recomputed, checked against Mantle. This step provably happened.</p>
+        <div class="cell-placeholder"><span class="placeholder-text" style="color: var(--proof)">Verified</span></div>
+        <div class="cell-content">
+          <div>
+            <span class="pill g">Verified</span>
+            <h3 style="margin-top:1.1rem">Hash matches the on-chain anchor.</h3>
+            <p>Re-fetched, recomputed, checked against Mantle. This step provably happened.</p>
+          </div>
+          <p class="hashcmp g">1bdc92ad…e7a61c ≡ 1bdc92ad…e7a61c</p>
         </div>
-        <p class="hashcmp g">1bdc92ad…e7a61c ≡ 1bdc92ad…e7a61c</p>
       </div></div>
       <div class="cell-shell c-fork rv"><div class="cell">
-        <div>
-          <span class="pill b">Fork and replay</span>
-          <h3 style="margin-top:1.1rem">Find the bug without redeploying.</h3>
-          <div class="vsmini" style="margin-top:.8rem">
-            <span><b>Original</b> · risk 0.42 · checks passed · funds moved</span>
-            <span class="fk"><b>Fork</b> · risk 0.55 · check failed · no action</span>
+        <div class="cell-placeholder"><span class="placeholder-text" style="color: var(--fork)">Replay</span></div>
+        <div class="cell-content">
+          <div>
+            <span class="pill b">Fork and replay</span>
+            <h3 style="margin-top:1.1rem">Find the bug without redeploying.</h3>
+            <div class="vsmini" style="margin-top:.8rem">
+              <span><b>Original</b> · risk 0.42 · checks passed · funds moved</span>
+              <span class="fk"><b>Fork</b> · risk 0.55 · check failed · no action</span>
+            </div>
           </div>
+          <p>Deterministic re-execution. No model call in the replay path, so the same fork gives the same answer every time.</p>
         </div>
-        <p>Deterministic re-execution. No model call in the replay path, so the same fork gives the same answer every time.</p>
       </div></div>
       <div class="cell-shell c-mismatch rv"><div class="cell">
-        <div>
-          <span class="pill r">Mismatch</span>
-          <h3 style="margin-top:1.1rem">Tampering fails closed.</h3>
-          <p>Someone touched the record. The badge turns red, with proof.</p>
+        <div class="cell-placeholder"><span class="placeholder-text" style="color: var(--err)">Tampered</span></div>
+        <div class="cell-content">
+          <div>
+            <span class="pill r">Mismatch</span>
+            <h3 style="margin-top:1.1rem">Tampering fails closed.</h3>
+            <p>Someone touched the record. The badge turns red, with proof.</p>
+          </div>
+          <p class="hashcmp r">8f02c1aa…94d3e0 ≠ 1bdc92ad…e7a61c</p>
         </div>
-        <p class="hashcmp r">8f02c1aa…94d3e0 ≠ 1bdc92ad…e7a61c</p>
       </div></div>
       <div class="cell-shell c-contract rv"><div class="cell">
-        <div>
-          <span class="pill o">On Mantle</span>
-          <h3 style="margin-top:1.1rem">Write-once anchors.</h3>
-          <p>FlightRecorder.sol, verified source.</p>
+        <div class="cell-placeholder"><span class="placeholder-text" style="color: #FFD700">Mantle</span></div>
+        <div class="cell-content">
+          <div>
+            <span class="pill o">On Mantle</span>
+            <h3 style="margin-top:1.1rem">Write-once anchors.</h3>
+            <p>FlightRecorder.sol, verified source.</p>
+          </div>
+          <a class="lnk" href="https://explorer.sepolia.mantle.xyz/address/0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062" target="_blank" rel="noopener">0x4d46…d062 ↗</a>
         </div>
-        <a class="lnk" href="https://explorer.sepolia.mantle.xyz/address/0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062" target="_blank" rel="noopener">0x4d46…d062 ↗</a>
       </div></div>
     </div>
   </div>

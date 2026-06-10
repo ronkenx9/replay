@@ -168,12 +168,12 @@
   .mcps span{font-family:var(--mono);font-size:.7rem;color:var(--t1);padding:.9rem 1.2rem;border:1px solid var(--line);background:var(--shell);transition:background .35s var(--ease),color .35s var(--ease),border-color .35s var(--ease);cursor:default}
   .mcps span:hover{background:var(--rec);color:#050505;border-color:var(--rec)}
 
-  /* close — split layout with image on the right */
-  .close-sec{position:relative;border-top:1px solid var(--line);overflow:hidden;background:var(--bg)}
-  .close-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(2rem,5vw,5rem);align-items:center;padding:clamp(5rem,8vw,8rem) 0}
-  .close-left{display:flex;flex-direction:column;justify-content:center}
-  .close-right{display:flex;justify-content:center;align-items:center}
-  .close-img{width:100%;height:auto;max-height:580px;aspect-ratio:16/9;object-fit:cover}
+  /* close — full-bleed layout with background image */
+  .close-sec{position:relative;border-top:1px solid var(--line);overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center}
+  .close-sec .bg{position:absolute;inset:0;background-image:url('assets/black-box.png');background-size:cover;background-position:right center;z-index:0;will-change:transform}
+  .close-sec .mask{position:absolute;inset:0;z-index:1;background:
+    linear-gradient(90deg, #050505 0%, rgba(5,5,5,.88) 30%, rgba(5,5,5,.25) 48%, transparent 65%, transparent 100%)}
+  .close-sec .inner{position:relative;z-index:2;width:100%}
   .close-sec h2{font-size:clamp(2.4rem,6vw,4.6rem);max-width:14ch}
   .close-sec h2 em{font-style:normal;color:var(--rec)}
   .trip{margin:2.4rem 0 3rem;border-left:2px solid var(--rec);padding-left:1.7rem;max-width:36rem;display:grid;gap:.55rem;font-size:1rem}
@@ -218,8 +218,9 @@
     section{padding:5rem 0}
     .brand-footer .wrap{flex-direction:column;text-align:center;gap:1.5rem}
     .brand-footer .footer-logo{margin:0 auto}
-    .close-grid{grid-template-columns:1fr;gap:3rem;text-align:left}
-    .close-img{max-height:350px}
+    .close-sec .bg{background-size:cover;background-position:60% center;opacity:.55}
+    .close-sec{aspect-ratio:auto;display:block}
+    .close-sec .inner{padding:6rem 0}
   }
 </style>
 </head>
@@ -387,10 +388,12 @@
   </div>
 </section>
 
-<!-- CLOSE: split layout with image on the right -->
+<!-- CLOSE: full-bleed background layout -->
 <section class="close-sec">
-  <div class="wrap close-grid">
-    <div class="close-left">
+  <div class="bg" id="closebg"></div>
+  <div class="mask"></div>
+  <div class="inner">
+    <div class="wrap">
       <h2 class="rv">Agents that move money need <em>a black box</em>.</h2>
       <div class="trip rv">
         <p><b>Datadog</b> tells you what your app did.</p>
@@ -401,9 +404,6 @@
         <a class="btn primary" href="#sdk">Start recording<span class="chip">↗</span></a>
         <a class="btn" href="https://explorer.sepolia.mantle.xyz/address/0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062" target="_blank" rel="noopener">Inspect the contract<span class="chip">↗</span></a>
       </div>
-    </div>
-    <div class="close-right rv">
-      <img src="assets/black-box.png" alt="REPLAY Black Box" class="close-img" />
     </div>
   </div>
 </section>

@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <style>
   :root{
     --bg:#050505; --bg2:#0A0A0C; --shell:rgba(255,255,255,.04); --core:#0D0D10;
@@ -89,8 +91,8 @@
   @keyframes tick{to{transform:translateX(-50%)}}
 
   /* ===== SCRUB ===== */
-  #scrub{position:relative;z-index:1;height:380vh}
-  #scrub .stage{position:sticky;top:0;height:100dvh;display:flex;flex-direction:column;justify-content:center;background:var(--bg2);overflow:hidden}
+  #scrub{position:relative;z-index:1}
+  #scrub .stage{position:relative;height:100dvh;display:flex;flex-direction:column;justify-content:center;background:var(--bg2);overflow:hidden}
   .stage h2{font-size:clamp(1.8rem,4vw,3rem);margin-bottom:.8rem;max-width:24ch}
   .stage h2 em{font-style:normal;color:var(--rec)}
   .stage .stagewink{font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;color:var(--t3);margin-bottom:3rem}
@@ -102,18 +104,47 @@
   .srail .ph .tm{position:absolute;top:-2.2rem;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.62rem;color:var(--rec);letter-spacing:.1em;white-space:nowrap}
   .sstop{position:absolute;top:0}
   .sstop .pt{position:absolute;top:24px;width:9px;height:9px;background:var(--bg);border:1px solid var(--t3);transform:rotate(45deg);transition:background .3s var(--ease),border-color .3s var(--ease)}
-  .sstop .lb{position:absolute;top:50px;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);white-space:nowrap;transition:color .3s var(--ease)}
+  .sstop .lb{position:absolute;top:50px;left:50%;transform:translate(-50%,4px);font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);white-space:nowrap;opacity:0;transition:opacity .3s var(--ease),transform .3s var(--ease);pointer-events:none;display:inline-block}
   .sstop.on .pt{background:var(--rec);border-color:var(--rec);box-shadow:0 0 8px rgba(255,90,31,.6)}
-  .sstop.on .lb{color:var(--t1)}
+  .sstop.active .lb{opacity:1;transform:translate(-50%,0);color:var(--t1)}
   .sstop.last .pt{border-color:var(--proof)}
   .sstop.last.on .pt{background:var(--proof);border-color:var(--proof);box-shadow:0 0 8px rgba(54,209,125,.6)}
-  .scard-shell{background:var(--shell);border:1px solid var(--line);padding:7px;max-width:46rem}
-  .scard{background:var(--core);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);position:relative;min-height:9rem;font-family:var(--mono)}
-  .scard .tag{position:absolute;top:-1px;left:-1px;background:var(--rec);color:#050505;font-size:.58rem;letter-spacing:.18em;padding:.34rem .85rem}
-  .scard .body{padding:2.3rem 1.4rem 1.2rem;font-size:.74rem;line-height:1.9}
-  .scard .k{color:var(--t3);text-transform:uppercase;font-size:.58rem;letter-spacing:.14em;margin-right:.8rem}
-  .scard .v{color:var(--t1);word-break:break-all}
-  .scard .ok{color:var(--proof)}
+
+  /* horizontal scrub */
+  .scrub-track-wrapper{width:100%;overflow:hidden;position:relative;margin-top:2rem}
+  .scrub-track{display:flex;gap:32px;width:max-content;padding-left:clamp(1.25rem,4vw,3.5rem);padding-right:50vw;will-change:transform}
+  .scrub-card-shell{background:var(--shell);border:1px solid var(--line);padding:8px;border-radius:16px}
+  .scrub-card{display:grid;grid-template-columns:1.25fr 1fr;width:850px;height:420px;background:#0A0A0D;border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.03);border-radius:12px;align-items:stretch;overflow:hidden}
+  .card-info{display:flex;flex-direction:column;justify-content:space-between;padding:2.2rem;height:100%}
+  .card-eyebrow{display:inline-flex;align-items:center;gap:0.55rem;font-family:var(--mono);font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--t3)}
+  .card-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--rec)}
+  .card-eyebrow.proof .dot{background:var(--proof)}
+  .card-info h3{font-family:var(--disp);font-size:2rem;font-weight:700;color:var(--t1);letter-spacing:-0.03em;line-height:1.15;margin-top:0.8rem;margin-bottom:0}
+  .card-body{flex-grow:1;display:flex;flex-direction:column;justify-content:center;margin-top:1.5rem}
+  .card-body .data{font-family:var(--mono);font-size:0.74rem;line-height:2.1}
+  .card-body .data .k{color:var(--t3);text-transform:uppercase;font-size:0.58rem;letter-spacing:0.14em;margin-right:1rem;display:inline-block;min-width:110px}
+  .card-body .data .v{color:var(--t1)}
+  .card-body .data .v.ok{color:var(--proof)}
+  
+  .card-footnote{display:flex;align-items:center;gap:0.6rem;font-family:var(--mono);font-size:0.62rem;color:var(--t3);letter-spacing:0.08em;text-transform:uppercase;border-top:1px solid var(--line);padding-top:1.2rem;margin-top:auto}
+  .card-footnote svg{width:12px;height:12px;stroke:var(--rec);opacity:0.85}
+  .card-footnote.proof svg{stroke:var(--proof)}
+
+  .card-graphic-wrapper{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(255,255,255,0.015), rgba(255,255,255,0.003));border-left:1px solid var(--line);height:100%;position:relative;overflow:hidden;border-radius:0 12px 12px 0}
+  .card-graphic{width:82%;height:82%;aspect-ratio:1/1;border-radius:8px;border:1px solid var(--line2);box-shadow:0 16px 40px rgba(0,0,0,0.5);overflow:hidden;position:relative}
+  .card-graphic img{width:100%;height:100%;object-fit:cover;display:block}
+
+  @media(max-width:800px){
+    .scrub-track{gap:20px}
+    .scrub-card{grid-template-columns:1fr;width:clamp(280px,82vw,400px);height:auto;border-radius:12px}
+    .card-graphic-wrapper{border-left:none;border-bottom:1px solid var(--line);height:280px;border-radius:12px 12px 0 0}
+    .card-graphic{width:220px;height:220px}
+    .card-info{padding:1.6rem}
+    .card-eyebrow{margin-bottom:1rem}
+    .card-info h3{font-size:1.5rem;margin-top:0.4rem}
+    .card-body{margin-top:1.2rem}
+    .card-footnote{margin-top:1.5rem}
+  }
 
   section{position:relative;z-index:1;padding:clamp(6rem,11vw,10rem) 0}
   h2.big{font-size:clamp(2rem,4.6vw,3.4rem);margin-bottom:1.2rem;max-width:20ch}
@@ -299,12 +330,9 @@
         <div class="fill" id="sfill"></div>
         <div class="ph" id="sph"><span class="tm" id="stm">14:32:11</span></div>
       </div>
-      <div class="scard-shell">
-        <div class="scard">
-          <span class="tag" id="stag">STEP 01 · OBSERVATION</span>
-          <div class="body" id="sbody"></div>
-        </div>
-      </div>
+    </div>
+    <div class="scrub-track-wrapper">
+      <div class="scrub-track" id="scrubTrack"></div>
     </div>
   </div>
 </div>
@@ -459,83 +487,167 @@
   }), { threshold: 0.15 });
   document.querySelectorAll('.rv').forEach(el => io.observe(el));
 
-  /* scrub: rAF, transform/width only */
   const steps = [
-    { lb:'Prompt received', kind:'OBSERVATION', t:'14:32:11', rows:[['objective','maximize risk-adjusted yield'],['idle','5,000 USDY · earning 0%']] },
-    { lb:'Model output',    kind:'DECISION',    t:'14:32:13', rows:[['proposal','MOVE idle USDY → Aave V3 supply'],['expected apy','4.81%']] },
-    { lb:'Tool call',       kind:'TOOL_CALL',   t:'14:32:15', rows:[['get_apy','aave_usdy_supply → 4.81%'],['get_exposure','aave 37.5% · cap 40%']] },
-    { lb:'Risk check',      kind:'RISK_CHECK',  t:'14:32:18', rows:[['max_single_venue','PASS · 37.5% under cap'],['min_reserve','PASS · 12% above floor']] },
-    { lb:'Tx prepared',     kind:'ACTION',      t:'14:32:21', rows:[['calldata','supply(USDY, 2000e6, agent, 0)'],['mode','dry-run simulated']] },
-    { lb:'Tx submitted',    kind:'ACTION',      t:'14:32:23', rows:[['tx','0x475a60…7508bf'],['status','confirmed']] },
-    { lb:'Anchor confirmed',kind:'PROOF',       t:'14:32:27', rows:[['packet hash','1bdc92ad…e7a61c'],['anchor','FlightRecorder · 0x4d46…d062'],['status','VERIFIED ON MANTLE','ok']] },
+    { lb:'Prompt received', kind:'OBSERVATION', t:'14:32:11', fn:'Initial prompt parsed for risk check', rows:[['objective','maximize risk-adjusted yield'],['idle','5,000 USDY · earning 0%']] },
+    { lb:'Model output',    kind:'DECISION',    t:'14:32:13', fn:'Action plan generated by agent', rows:[['proposal','MOVE idle USDY → Aave V3 supply'],['expected apy','4.81%']] },
+    { lb:'Tool call',       kind:'TOOL_CALL',   t:'14:32:15', fn:'Live APY and venue checks completed', rows:[['get_apy','aave_usdy_supply → 4.81%'],['get_exposure','aave 37.5% · cap 40%']] },
+    { lb:'Risk check',      kind:'RISK_CHECK',  t:'14:32:18', fn:'Safety checks executed against limits', rows:[['max_single_venue','PASS · 37.5% under cap'],['min_reserve','PASS · 12% above floor']] },
+    { lb:'Tx prepared',     kind:'ACTION',      t:'14:32:21', fn:'Transaction calldata compiled and simulated', rows:[['calldata','supply(USDY, 2000e6, agent, 0)'],['mode','dry-run simulated']] },
+    { lb:'Tx submitted',    kind:'ACTION',      t:'14:32:23', fn:'Broadcast to Mantle Sepolia network', rows:[['tx','0x475a60…7508bf'],['status','confirmed']] },
+    { lb:'Anchor confirmed',kind:'PROOF',       t:'14:32:27', fn:'FlightRecorder cryptographic anchor verified', rows:[['packet hash','1bdc92ad…e7a61c'],['anchor','FlightRecorder · 0x4d46…d062'],['status','VERIFIED ON MANTLE','ok']] },
   ];
+
+  /* Generate timeline stop dots */
   const rail = document.getElementById('srail');
   steps.forEach((s, i) => {
     const x = (i / (steps.length - 1)) * 100;
     const d = document.createElement('div');
     d.className = 'sstop' + (i === steps.length - 1 ? ' last' : '');
     d.style.left = i === steps.length - 1 ? 'calc(100% - 9px)' : `calc(${x}% - 4px)`;
-    d.innerHTML = `<span class="pt"></span><span class="lb" style="${x > 60 ? 'right:0;left:auto;text-align:right' : ''}">${s.lb}</span>`;
+    d.innerHTML = `<span class="pt"></span><span class="lb">${s.lb}</span>`;
     rail.appendChild(d);
   });
   const stops = [...rail.querySelectorAll('.sstop')];
-  const sfill = document.getElementById('sfill'), sph = document.getElementById('sph'),
-        stm = document.getElementById('stm'), stag = document.getElementById('stag'),
-        sbody = document.getElementById('sbody'), scrub = document.getElementById('scrub'),
-        nav = document.getElementById('nav'), herobg = document.getElementById('herobg'),
+  stops.forEach((n, j) => {
+    n.classList.toggle('on', j === 0);
+    n.classList.toggle('active', j === 0);
+  });
+
+  /* Generate horizontal cards */
+  const track = document.getElementById('scrubTrack');
+  steps.forEach((s, i) => {
+    const shell = document.createElement('div');
+    shell.className = 'scrub-card-shell';
+    const isLast = i === steps.length - 1;
+    const tagClass = isLast ? 'card-eyebrow proof' : 'card-eyebrow';
+    const fnClass = isLast ? 'card-footnote proof' : 'card-footnote';
+    const rowsHtml = s.rows.map(r => `
+      <div>
+        <span class="k">${r[0]}</span>
+        <span class="v ${r[2] || ''}">${r[1]}</span>
+      </div>
+    `).join('');
+
+    shell.innerHTML = `
+      <div class="scrub-card">
+        <div class="card-info">
+          <div>
+            <div class="${tagClass}">
+              <span class="dot"></span>STEP 0${i + 1} · ${s.kind}
+            </div>
+            <h3>${s.lb}</h3>
+            <div class="card-body">
+              <div class="data">
+                ${rowsHtml}
+              </div>
+            </div>
+          </div>
+          <div class="${fnClass}">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="8" r="5"></circle>
+              <line x1="8" y1="1" x2="8" y2="3"></line>
+              <line x1="8" y1="13" x2="8" y2="15"></line>
+              <line x1="1" y1="8" x2="3" y2="8"></line>
+              <line x1="13" y1="8" x2="15" y2="8"></line>
+            </svg>
+            <span>${s.fn}</span>
+          </div>
+        </div>
+        <div class="card-graphic-wrapper">
+          <div class="card-graphic">
+            <img src="assets/step-${i + 1}.png" alt="${s.lb}" />
+          </div>
+        </div>
+      </div>
+    `;
+    track.appendChild(shell);
+  });
+
+  const sfill = document.getElementById('sfill'),
+        sph = document.getElementById('sph'),
+        stm = document.getElementById('stm'),
+        scrub = document.getElementById('scrub'),
+        nav = document.getElementById('nav'),
+        herobg = document.getElementById('herobg'),
         closebg = document.getElementById('closebg');
-  let active = -1;
-  function setStep(i) {
-    if (i === active) return; active = i;
-    const s = steps[i];
-    stag.textContent = `STEP 0${i + 1} · ${s.kind}`;
-    stag.style.background = i === steps.length - 1 ? 'var(--proof)' : 'var(--rec)';
-    sbody.innerHTML = s.rows.map(r => `<div><span class="k">${r[0]}</span><span class="v ${r[2] || ''}">${r[1]}</span></div>`).join('');
-    stops.forEach((n, j) => {
-      n.classList.toggle('on', j <= i);
-      n.classList.toggle('active', j === i);
+
+  /* Nav active toggle */
+  ScrollTrigger.create({
+    start: 'top -40',
+    onToggle: self => nav.classList.toggle('on', self.isActive)
+  });
+
+  /* Parallax and Horizontal Scrubber Animations */
+  if (!reduce) {
+    if (herobg) {
+      gsap.to(herobg, {
+        yPercent: 12,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: herobg.parentElement,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true
+        }
+      });
+    }
+    if (closebg) {
+      gsap.to(closebg, {
+        yPercent: -12,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: closebg.parentElement,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: true
+        }
+      });
+    }
+
+    const getScrollDistance = () => track.scrollWidth - window.innerWidth;
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: '#scrub',
+        start: 'top top',
+        end: () => `+=${track.scrollWidth}`,
+        pin: true,
+        scrub: 0.5,
+        invalidateOnRefresh: true,
+        onUpdate: self => {
+          const p = self.progress;
+          const idx = Math.round(p * (steps.length - 1));
+          stm.textContent = steps[idx].t;
+          stops.forEach((n, j) => {
+            n.classList.toggle('on', j <= idx);
+            n.classList.toggle('active', j === idx);
+          });
+        }
+      }
     });
-  }
-  setStep(0);
-  let tick = false;
-  function frame() {
-    tick = false;
-    const y = scrollY;
-    nav.classList.toggle('on', y > 40);
 
-    /* parallax: hero bg drifts up slowly, close bg drifts down slowly */
-    if (!reduce) {
-      if (herobg) {
-        const rh = herobg.parentElement.getBoundingClientRect();
-        if (rh.bottom > 0 && rh.top < innerHeight) {
-          const off = (rh.top * -0.12);
-          herobg.style.transform = `translate3d(0,${off}px,0)`;
-        }
-      }
-      if (closebg) {
-        const rc = closebg.parentElement.getBoundingClientRect();
-        if (rc.bottom > 0 && rc.top < innerHeight) {
-          const off = ((rc.top - innerHeight / 2) * -0.08);
-          closebg.style.transform = `translate3d(0,${off}px,0)`;
-        }
-      }
-    }
+    tl.to(track, {
+      x: () => -getScrollDistance(),
+      ease: 'none'
+    }, 0);
 
-    /* scrub */
-    const r = scrub.getBoundingClientRect();
-    const total = r.height - innerHeight;
-    if (total > 0) {
-      const p = Math.min(1, Math.max(0, -r.top / total));
-      sfill.style.width = (p * 100) + '%';
-      sph.style.transform = `translateX(${p * rail.offsetWidth}px)`;
-      const idx = Math.min(steps.length - 1, Math.floor(p * steps.length));
-      stm.textContent = steps[idx].t;
-      setStep(idx);
-    }
+    tl.to(sfill, {
+      width: '100%',
+      ease: 'none'
+    }, 0);
+
+    tl.to(sph, {
+      x: () => rail.offsetWidth,
+      ease: 'none'
+    }, 0);
+  } else {
+    // prefers-reduced-motion fallback
+    track.style.flexWrap = 'wrap';
+    track.style.paddingRight = 'clamp(1.25rem, 4vw, 3.5rem)';
+    sfill.style.width = '100%';
+    sph.style.display = 'none';
+    stops.forEach(n => n.classList.add('on'));
   }
-  addEventListener('scroll', () => { if (!tick) { tick = true; requestAnimationFrame(frame); } }, { passive: true });
-  addEventListener('resize', frame);
-  frame();
 })();
 </script>
 </body>

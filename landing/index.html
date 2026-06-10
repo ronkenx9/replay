@@ -130,12 +130,17 @@
   /* bento */
   .bento{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:4rem}
   .cell-shell{background:var(--shell);border:1px solid var(--line);padding:7px}
-  .cell{position:relative;overflow:hidden;background:var(--core);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:1.8rem;height:100%;transition:border-color .4s var(--ease),box-shadow .4s var(--ease)}
+  .cell{position:relative;overflow:hidden;background:var(--core);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:1.8rem;height:100%;transition:border-color .4s var(--ease),box-shadow .4s var(--ease);container-type:inline-size}
   .cell-content{display:flex;flex-direction:column;justify-content:space-between;gap:1.4rem;height:100%;opacity:0;transform:translateY(12px);transition:opacity .45s var(--ease),transform .45s var(--ease)}
   .cell-shell:hover .cell-content{opacity:1;transform:translateY(0)}
-  .cell-placeholder{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .4s var(--ease),transform .4s var(--ease);opacity:1;background:transparent;padding:1.8rem}
+  .cell-placeholder{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .4s var(--ease),transform .4s var(--ease);opacity:1;background:transparent;overflow:hidden}
   .cell-shell:hover .cell-placeholder{opacity:0;transform:scale(.94)}
-  .placeholder-text{font-family:var(--disp);font-weight:900;font-size:clamp(1.8rem,3vw,3.2rem);text-transform:uppercase;letter-spacing:.05em;-webkit-text-stroke:1.5px currentColor;color:transparent;text-align:center;line-height:1}
+  .placeholder-text{font-family:var(--disp);font-weight:900;text-transform:uppercase;letter-spacing:-.05em;-webkit-text-stroke:2px var(--c);color:transparent;text-align:center;line-height:.85;white-space:nowrap;user-select:none;display:block}
+  .c-packet .placeholder-text{font-size:22cqw}
+  .c-verify .placeholder-text{font-size:20cqw}
+  .c-fork .placeholder-text{font-size:26cqw}
+  .c-mismatch .placeholder-text{font-size:22cqw}
+  .c-contract .placeholder-text{font-size:28cqw}
   .c-packet:hover .cell{border-color:var(--rec);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 20px rgba(255,90,31,.25)}
   .c-verify:hover .cell{border-color:var(--proof);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 20px rgba(54,209,125,.25)}
   .c-fork:hover .cell{border-color:var(--fork);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 20px rgba(59,130,246,.25)}
@@ -323,7 +328,7 @@
     <p class="sub rv">One packet per step: hashed, stored, anchored on Mantle the moment it happens. All values below are real.</p>
     <div class="bento">
       <div class="cell-shell c-packet rv"><div class="cell">
-        <div class="cell-placeholder"><span class="placeholder-text" style="color: var(--rec)">Evidence</span></div>
+        <div class="cell-placeholder"><span class="placeholder-text" style="--c: var(--rec)">Evidence</span></div>
         <div class="cell-content">
           <div>
             <span class="pill o">Evidence packet · seq 002</span>
@@ -339,7 +344,7 @@
         </div>
       </div></div>
       <div class="cell-shell c-verify rv"><div class="cell">
-        <div class="cell-placeholder"><span class="placeholder-text" style="color: var(--proof)">Verified</span></div>
+        <div class="cell-placeholder"><span class="placeholder-text" style="--c: var(--proof)">Verified</span></div>
         <div class="cell-content">
           <div>
             <span class="pill g">Verified</span>
@@ -350,7 +355,7 @@
         </div>
       </div></div>
       <div class="cell-shell c-fork rv"><div class="cell">
-        <div class="cell-placeholder"><span class="placeholder-text" style="color: var(--fork)">Replay</span></div>
+        <div class="cell-placeholder"><span class="placeholder-text" style="--c: var(--fork)">Replay</span></div>
         <div class="cell-content">
           <div>
             <span class="pill b">Fork and replay</span>
@@ -364,7 +369,7 @@
         </div>
       </div></div>
       <div class="cell-shell c-mismatch rv"><div class="cell">
-        <div class="cell-placeholder"><span class="placeholder-text" style="color: var(--err)">Tampered</span></div>
+        <div class="cell-placeholder"><span class="placeholder-text" style="--c: var(--err)">Tampered</span></div>
         <div class="cell-content">
           <div>
             <span class="pill r">Mismatch</span>
@@ -375,7 +380,7 @@
         </div>
       </div></div>
       <div class="cell-shell c-contract rv"><div class="cell">
-        <div class="cell-placeholder"><span class="placeholder-text" style="color: #FFD700">Mantle</span></div>
+        <div class="cell-placeholder"><span class="placeholder-text" style="--c: #FFD700">Mantle</span></div>
         <div class="cell-content">
           <div>
             <span class="pill o">On Mantle</span>

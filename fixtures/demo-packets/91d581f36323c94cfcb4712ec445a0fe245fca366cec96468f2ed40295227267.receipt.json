@@ -1,0 +1,13 @@
+{
+  "runId": "merid-replay-demo-0001-1781035186853",
+  "agentId": "0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C",
+  "stepIndex": 2,
+  "kind": "decision",
+  "summary": "Risk policy passed.",
+  "anchorRef": "evm:5003:0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062:0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C:0x2bcabbb333f5b0c50a7a5853dfee91340c10ded2badc03db36a45cda8a98b85f:2",
+  "txHash": "0xa4bc6add1c3a62261cd65ea8b40d3ad0e509a795b4d5453bf0a95c05cb653b25",
+  "blobId": "91d581f36323c94cfcb4712ec445a0fe245fca366cec96468f2ed40295227267.json",
+  "contentHash": "91d581f36323c94cfcb4712ec445a0fe245fca366cec96468f2ed40295227267",
+  "verifyUrl": "https://explorer.sepolia.mantle.xyz/tx/0xa4bc6add1c3a62261cd65ea8b40d3ad0e509a795b4d5453bf0a95c05cb653b25",
+  "atMs": 1781037000000
+}

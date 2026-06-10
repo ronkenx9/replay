@@ -1,0 +1,13 @@
+{
+  "runId": "merid-replay-demo-0001-1781035186853",
+  "agentId": "0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C",
+  "stepIndex": 1,
+  "kind": "tool_call",
+  "summary": "Signals captured for 5 venues.",
+  "anchorRef": "evm:5003:0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062:0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C:0x2bcabbb333f5b0c50a7a5853dfee91340c10ded2badc03db36a45cda8a98b85f:1",
+  "txHash": "0x809eaf8dbc630eca22414fe89668ba66bb0b7e26795228c4e3d388b972f95028",
+  "blobId": "f11c61c08b1bacd494d233fdc99bf74d460877430fe87801ea17899391205536.json",
+  "contentHash": "f11c61c08b1bacd494d233fdc99bf74d460877430fe87801ea17899391205536",
+  "verifyUrl": "https://explorer.sepolia.mantle.xyz/tx/0x809eaf8dbc630eca22414fe89668ba66bb0b7e26795228c4e3d388b972f95028",
+  "atMs": 1781037000000
+}

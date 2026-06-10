@@ -1,0 +1,1 @@
+{"runId":"live-smoke-1781032805836","agentId":"replay-live-smoke","stepIndex":1,"kind":"decision","summary":"tampered EVM smoke packet","payload":{"chainId":5003,"contractAddress":"0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062"},"status":"ok","atMs":1781032805836}

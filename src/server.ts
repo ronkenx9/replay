@@ -5,7 +5,7 @@ import { createPublicClient, http, type Address } from "viem";
 import { verifyPacketAnchor } from "./server-verifier.js";
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4174;
-const PACKET_DIR = join(process.cwd(), "data", "packets");
+const PACKET_DIR = process.env.REPLAY_PACKET_DIR ?? join(process.cwd(), "data", "packets");
 const MANTLE_SEPOLIA_RPC_URL = process.env.MANTLE_SEPOLIA_RPC_URL || "https://rpc.sepolia.mantle.xyz";
 
 const FLIGHT_RECORDER_ABI = [
@@ -297,3 +297,9 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`[REPLAY API] Server listening on port ${PORT}`);
 });
+
+// SCF web-function entry: importing this module starts the listener (Tencent
+// web functions proxy API Gateway traffic to the server on PORT, default 9000
+// in serverless.yml). The export exists so `handler: dist/server.handler`
+// resolves; it is not invoked per-request.
+export const handler = server;

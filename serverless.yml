@@ -1,0 +1,47 @@
+# serverless.yml — REPLAY API on Tencent Cloud Serverless Cloud Function (SCF, web type).
+# Pattern ported from ../gaslight/serverless.yml. Deploy with the Serverless Framework
+# (`npx serverless deploy`) using TENCENT_SECRET_ID / TENCENT_SECRET_KEY credentials.
+#
+# After deploy, take the API Gateway URL and rebuild the viewer with
+#   VITE_REPLAY_API_BASE_URL=<gateway url> npm run build:web
+# then host the static viewer (Tencent static hosting or Vercel fallback).
+org: default
+app: replay
+stage: dev
+component: scf
+
+inputs:
+  name: replay-api
+  src:
+    src: ./
+    exclude:
+      - node_modules/**
+      - test/**
+      - src/**
+      - landing/**
+      - frontend images/**
+      - data/packets/**
+  handler: dist/server.handler # web function: forwards HTTP to the listening server
+  runtime: Nodejs18.15
+  region: ap-guangzhou
+  type: web # Tencent Web Function — proxies API Gateway straight to the HTTP server
+  events:
+    - apigw:
+        parameters:
+          protocols:
+            - http
+            - https
+          environment: release
+          endpoints:
+            - path: /
+              method: ANY
+              function:
+                isDefault: true
+  environment:
+    variables:
+      PORT: "9000" # Web Functions forward requests to port 9000 by default
+      MANTLE_SEPOLIA_RPC_URL: "https://rpc.sepolia.mantle.xyz"
+      FLIGHT_RECORDER_ADDRESS: "0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062"
+      # SCF bundles are read-only outside /tmp; serve the curated demo run
+      # committed under fixtures/demo-packets (commit it before deploying).
+      REPLAY_PACKET_DIR: "fixtures/demo-packets"

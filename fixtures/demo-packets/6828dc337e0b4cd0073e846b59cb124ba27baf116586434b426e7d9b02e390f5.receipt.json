@@ -1,0 +1,13 @@
+{
+  "runId": "gl-replay-demo-0001-1781035220484",
+  "agentId": "meridian-agent",
+  "stepIndex": 1,
+  "kind": "tool_call",
+  "summary": "Original estimate 250000; optimized gas 118400.",
+  "anchorRef": "evm:5003:0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062:0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C:0x2f2887c18f0fb11d99a8b2d4c9231c970ee0e6951ce063caf72f4e130d416093:1",
+  "txHash": "0x05db9f77fca78d5d1b5b37b714a8365dfeb532e227793202da2edeedf86de7a6",
+  "blobId": "6828dc337e0b4cd0073e846b59cb124ba27baf116586434b426e7d9b02e390f5.json",
+  "contentHash": "6828dc337e0b4cd0073e846b59cb124ba27baf116586434b426e7d9b02e390f5",
+  "verifyUrl": "https://explorer.sepolia.mantle.xyz/tx/0x05db9f77fca78d5d1b5b37b714a8365dfeb532e227793202da2edeedf86de7a6",
+  "atMs": 1781037900000
+}

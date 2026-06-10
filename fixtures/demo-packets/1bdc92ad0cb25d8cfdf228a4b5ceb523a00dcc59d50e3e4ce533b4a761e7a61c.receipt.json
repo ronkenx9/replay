@@ -1,0 +1,13 @@
+{
+  "runId": "gl-replay-demo-0001-1781035220484",
+  "agentId": "meridian-agent",
+  "stepIndex": 2,
+  "kind": "decision",
+  "summary": "Saved 52.6% gas; MEV recommendation safe.",
+  "anchorRef": "evm:5003:0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062:0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C:0x2f2887c18f0fb11d99a8b2d4c9231c970ee0e6951ce063caf72f4e130d416093:2",
+  "txHash": "0x475a60418e248c9ce524a94439a5526aba54278446650c30c8b67b67fb7508bf",
+  "blobId": "1bdc92ad0cb25d8cfdf228a4b5ceb523a00dcc59d50e3e4ce533b4a761e7a61c.json",
+  "contentHash": "1bdc92ad0cb25d8cfdf228a4b5ceb523a00dcc59d50e3e4ce533b4a761e7a61c",
+  "verifyUrl": "https://explorer.sepolia.mantle.xyz/tx/0x475a60418e248c9ce524a94439a5526aba54278446650c30c8b67b67fb7508bf",
+  "atMs": 1781037900000
+}

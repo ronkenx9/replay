@@ -18,7 +18,8 @@
     "smoke:evm": "tsx scripts/live-evm-smoke.ts",
     "smoke:meridian": "tsx scripts/meridian-replay-smoke.ts",
     "smoke:gaslight": "tsx scripts/gaslight-replay-smoke.ts",
-    "preview:web": "vite preview --host 127.0.0.1"
+    "preview:web": "vite preview --host 127.0.0.1",
+    "kms:derive-address": "tsx scripts/derive-kms-address.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

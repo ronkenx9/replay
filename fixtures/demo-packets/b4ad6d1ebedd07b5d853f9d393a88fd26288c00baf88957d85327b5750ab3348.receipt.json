@@ -1,0 +1,13 @@
+{
+  "runId": "gl-replay-demo-0001-1781035220484",
+  "agentId": "meridian-agent",
+  "stepIndex": 3,
+  "kind": "action_taken",
+  "summary": "confirmed transaction 0x0000000000000000000000000000000000000000000000000000000000001234",
+  "anchorRef": "evm:5003:0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062:0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C:0x2f2887c18f0fb11d99a8b2d4c9231c970ee0e6951ce063caf72f4e130d416093:3",
+  "txHash": "0x56451d11bf1b529e13391db5c0992b3ceaea41ce791318277bf933572f3f3f7e",
+  "blobId": "b4ad6d1ebedd07b5d853f9d393a88fd26288c00baf88957d85327b5750ab3348.json",
+  "contentHash": "b4ad6d1ebedd07b5d853f9d393a88fd26288c00baf88957d85327b5750ab3348",
+  "verifyUrl": "https://explorer.sepolia.mantle.xyz/tx/0x56451d11bf1b529e13391db5c0992b3ceaea41ce791318277bf933572f3f3f7e",
+  "atMs": 1781037900000
+}

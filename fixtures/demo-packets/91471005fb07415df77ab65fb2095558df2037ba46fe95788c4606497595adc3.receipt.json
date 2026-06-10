@@ -1,0 +1,13 @@
+{
+  "runId": "merid-replay-demo-0001-1781035186853",
+  "agentId": "0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C",
+  "stepIndex": 3,
+  "kind": "decision",
+  "summary": "Discovered $2000.00 idle in wallet earning 0%. Proposing allocation to Agni Finance (mETH/USDY CL) yielding 7.4% after risk policy passed.",
+  "anchorRef": "evm:5003:0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062:0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C:0x2bcabbb333f5b0c50a7a5853dfee91340c10ded2badc03db36a45cda8a98b85f:3",
+  "txHash": "0x592ea26fbad65306fad2a0c7e440545a468e66e61c21765e2e8f56c73432c858",
+  "blobId": "91471005fb07415df77ab65fb2095558df2037ba46fe95788c4606497595adc3.json",
+  "contentHash": "91471005fb07415df77ab65fb2095558df2037ba46fe95788c4606497595adc3",
+  "verifyUrl": "https://explorer.sepolia.mantle.xyz/tx/0x592ea26fbad65306fad2a0c7e440545a468e66e61c21765e2e8f56c73432c858",
+  "atMs": 1781037000000
+}

@@ -48,9 +48,11 @@ consumer). GASLIGHT (`../gaslight`) is demoted: REPLAY demo client + optional se
 
 ## What REMAINS (TASKS.md is authoritative — work top to bottom)
 
-1. **P3 final box — public deploy.** Viewer + API to a public URL. Tencent serverless first
-   (port patterns from `../gaslight/{deploy.tencent.sh,serverless.yml}`); Vercel fallback for
-   the static viewer. GATE: public URL loads on a phone. Record URL in CLAUDE.md.
+1. **P3 final box — public deploy.** Viewer + API to a public URL. `serverless.yml` now exists
+   in-repo (SCF web function, ap-guangzhou, serves `fixtures/demo-packets` via
+   REPLAY_PACKET_DIR; `dist/server.handler` export added). Deploy with
+   `npx serverless deploy` + TENCENT_SECRET_ID/KEY; Vercel fallback for the static viewer.
+   GATE: public URL loads on a phone. Record URL in CLAUDE.md.
    Viewer API base is now configurable with `VITE_REPLAY_API_BASE_URL` at build time.
    Local dev defaults to `http://localhost:4174`; deployed frontends must set this to the
    public API origin or they will fall back to static mock runs.
@@ -85,6 +87,7 @@ npm run smoke:gaslight           # same for gaslight; both use unique run ids (w
 REPLAY_SIGNER_MODE=tencent-kms npm run smoke:evm
                                   # KMS path; uses live Tencent creds when present, otherwise prints
                                   # signerMode=tencent-kms-mock with an ephemeral local mock signer
+npm run kms:derive-address       # one-time: GetPublicKey -> EVM address for TENCENT_KMS_ADDRESS
 npm run mcp                      # stdio MCP server with REPLAY_* tools
 npm run dev                      # API server :4174 (runs list + /api/verify)
 npm run dev:web                  # Vite viewer on :5173

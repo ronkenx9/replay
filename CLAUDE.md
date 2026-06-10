@@ -10,7 +10,10 @@ core (../bound/src/blackbox/ — 495 LOC, dependency-injected, DO NOT rewrite, p
 ## Verified facts
 - Mantle Sepolia = 5003 (NOT 5001). Source core: ../bound/src/blackbox/{recorder,evidence,memory-backend}.ts
 - Demo clients: ../meridian (decision JSONL ≈ Evidence Packets), ../gaslight (audit log)
-- Tencent assets to port: ../gaslight/{submitter/kms.ts,deploy.tencent.sh,serverless.yml}
+- Tencent integration IN-REPO: src/signing/tencent-kms.ts (AsymmetricSign, live KMS) ·
+  serverless.yml (SCF web fn, serves fixtures/demo-packets) · scripts/derive-kms-address.ts.
+  Owner creds needed for live mode: TENCENT_SECRET_ID/KEY, TENCENT_KMS_KEY_ID(+REGION), then
+  `npm run kms:derive-address` -> TENCENT_KMS_ADDRESS -> fund with Sepolia MNT
 - ⚠️ Open-source scope = OWNER DECISION before submission (BOUND IP) — stop-and-ask, due Jun 14
 
 ## Deployed addresses

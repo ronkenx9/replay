@@ -31,6 +31,7 @@ import {
   Zap,
 } from "lucide-react";
 import { flightRecorderAddress, replayRuns, type ReplayRun } from "../viewer-data.js";
+import { replayApiUrl } from "./api.js";
 import "./styles.css";
 
 type VerifyStatus = "idle" | "success" | "success-fallback" | "tampered";
@@ -141,7 +142,7 @@ export function App() {
   const fetchRuns = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:4174/api/runs");
+      const response = await fetch(replayApiUrl("/api/runs"));
       const data = await response.json();
       if (Array.isArray(data) && data.length > 0) setRuns(data);
     } catch (error) {
@@ -175,7 +176,7 @@ export function App() {
     setVerifyDetails("");
 
     try {
-      const response = await fetch("http://localhost:4174/api/verify", {
+      const response = await fetch(replayApiUrl("/api/verify"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contentHash: step.contentHash, tamper }),

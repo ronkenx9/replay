@@ -68,7 +68,20 @@ async function run() {
     path: path.join(artifactDir, 'evidence_hover_packet.png')
   });
   console.log('Saved evidence_hover_packet.png');
-
+  
+  // 3. Capture Close Section
+  console.log('Scrolling to .close-sec...');
+  await page.evaluate(() => {
+    const el = document.querySelector('.close-sec');
+    if (el) el.scrollIntoView({ block: 'center' });
+  });
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  const closeEl = await page.$('.close-sec');
+  await closeEl.screenshot({
+    path: path.join(artifactDir, 'close.png')
+  });
+  console.log('Saved close.png');
+  
   await page.close();
   await browser.disconnect();
 }

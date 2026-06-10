@@ -8,6 +8,7 @@
     "build": "tsc",
     "build:web": "vite build",
     "dev": "tsx src/cli.ts",
+    "mcp": "tsx src/mcp-server.ts",
     "dev:web": "vite --host 127.0.0.1",
     "test": "vitest run",
     "lint": "tsc --noEmit",

@@ -46,9 +46,9 @@
       GATE: public URL on a phone.
 
 ## Phase 4 — MCP + Tencent polish (½ day)
-- [ ] MCP server: REPLAY_RECORD / REPLAY_RECALL / REPLAY_VERIFY / REPLAY_FORK (gaslight pattern).
+- [x] MCP server: REPLAY_RECORD / REPLAY_RECALL / REPLAY_VERIFY / REPLAY_FORK (gaslight pattern).
       GATE: Claude Code calls RECALL against a real run.
-- [ ] Tencent KMS signing path for the anchor wallet (port gaslight `submitter/kms.ts`).
+- [x] Tencent KMS signing path for the anchor wallet (port gaslight `submitter/kms.ts`).
       GATE: one anchor tx signed via KMS path, or mock-mode honestly labeled. (CUT if behind.)
 
 ## Phase 5 — Submission hardening (½ day) — protected

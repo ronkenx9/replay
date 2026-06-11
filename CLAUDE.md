@@ -22,4 +22,7 @@ core (../bound/src/blackbox/ — 495 LOC, dependency-injected, DO NOT rewrite, p
   - Deployer: `0x5a1b8F72e3D280eAEdC28aDb5909d3358e9a5B4C`
   - Bytecode check: `cast code ...` returned non-empty bytecode on chain `5003`
   - Source verification: Sourcify `exact_match`
-- Viewer URL: pending
+- Viewer URL: https://ronkenx9.github.io/replay/ (static — committed demo packets, browser-side
+  live anchor verify via src/viewer/static-verify.ts; no API needed. Deployed 2026-06-11)
+- Repo: https://github.com/ronkenx9/replay (pushed 2026-06-11 on owner instruction — BOUND-port
+  core is now public; IP scope decision de-facto made by the push)

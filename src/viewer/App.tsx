@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { flightRecorderAddress, replayRuns, type ReplayRun } from "../viewer-data.js";
 import { replayApiUrl } from "./api.js";
+import { verifyPacketStatic } from "./static-verify.js";
 import "./styles.css";
 
 type VerifyStatus = "idle" | "success" | "success-fallback" | "tampered";
@@ -55,9 +56,21 @@ export function App() {
     try {
       const response = await fetch(replayApiUrl("/api/runs"));
       const data = await response.json();
-      if (Array.isArray(data) && data.length > 0) setRuns(data);
-    } catch (error) {
-      console.warn("Using static fallback runs.", error);
+      if (Array.isArray(data) && data.length > 0) {
+        setRuns(data);
+        return;
+      }
+      throw new Error("API returned no runs");
+    } catch {
+      // No API (static deployment): load the committed demo bundle — real
+      // anchored packets with embedded bytes for browser-side verification.
+      try {
+        const response = await fetch(`${import.meta.env.BASE_URL}demo-data.json`);
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) setRuns(data);
+      } catch (error) {
+        console.warn("Using static fallback runs.", error);
+      }
     } finally {
       setLoading(false);
     }
@@ -101,8 +114,31 @@ export function App() {
         setVerifyDetails(data.reason || "Local packet hash mismatch.");
       }
     } catch {
-      setVerifyStatus("success-fallback");
-      setVerifyDetails("Local server unavailable; showing fixture-backed proof state.");
+      // No API (static deployment): verify in the browser — recompute sha256 of
+      // the embedded packet bytes and read the anchor straight from Mantle RPC.
+      if (step.contentHash && step.packetText) {
+        try {
+          const data = await verifyPacketStatic({
+            contentHash: step.contentHash,
+            packetText: step.packetText,
+            anchorRef: step.anchorRef,
+            tamper,
+          });
+          if (data.verified) {
+            setVerifyStatus("success");
+            setVerifyDetails(data.reason);
+          } else {
+            setVerifyStatus("tampered");
+            setVerifyDetails(data.reason);
+          }
+        } catch (error) {
+          setVerifyStatus("success-fallback");
+          setVerifyDetails(`Live RPC verification unavailable: ${(error as Error).message}`);
+        }
+      } else {
+        setVerifyStatus("success-fallback");
+        setVerifyDetails("Local server unavailable; showing fixture-backed proof state.");
+      }
     } finally {
       setVerifying(false);
       setTamperChecking(false);

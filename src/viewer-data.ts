@@ -9,6 +9,11 @@ export type ReplayStep = {
   status: "verified" | "tampered";
   ascii: string[];
   contentHash?: string;
+  /** evm:<chainId>:<contract>:<recorder>:<runIdHash>:<seq> — present on real anchored packets */
+  anchorRef?: string;
+  /** Exact packet bytes (utf8) — present in the static demo-data bundle so the
+   * browser can recompute the hash and live-verify without an API. */
+  packetText?: string;
 };
 
 export type ReplayRun = {

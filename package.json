@@ -19,7 +19,9 @@
     "smoke:meridian": "tsx scripts/meridian-replay-smoke.ts",
     "smoke:gaslight": "tsx scripts/gaslight-replay-smoke.ts",
     "preview:web": "vite preview --host 127.0.0.1",
-    "kms:derive-address": "tsx scripts/derive-kms-address.ts"
+    "kms:derive-address": "tsx scripts/derive-kms-address.ts",
+    "build:demo-data": "tsx scripts/build-demo-data.ts",
+    "build:pages": "npm run build:demo-data && vite build --base=/replay/"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

@@ -2,31 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
-  BadgeCheck,
-  Box,
   CheckCircle2,
   ChevronDown,
-  Clock3,
-  Code2,
-  Copy,
-  Database,
   ExternalLink,
   GitFork,
-  Hash,
-  Home,
-  Layers3,
-  Menu,
-  Network,
   Pause,
   Play,
   RefreshCw,
   RotateCcw,
-  Search,
   Server,
   ShieldCheck,
   Square,
-  Terminal,
-  Timer,
   X,
   Zap,
 } from "lucide-react";
@@ -36,46 +22,21 @@ import "./styles.css";
 
 type VerifyStatus = "idle" | "success" | "success-fallback" | "tampered";
 
-const HERO_IMAGE = "/assets/replay-hero-recorder.png";
-const DEVICE_IMAGE = "/assets/replay-device-closeup.png";
-
 function short(hash = "") {
-  return hash.length > 16 ? `${hash.slice(0, 8)}...${hash.slice(-6)}` : hash;
+  return hash.length > 16 ? `${hash.slice(0, 8)}…${hash.slice(-6)}` : hash;
 }
 
-function Logo() {
-  return (
-    <div className="logo" aria-label="REPLAY">
-      <span className="logo-orbit">
-        <Play size={13} fill="currentColor" />
-      </span>
-      <span className="logo-text">REPLAY</span>
-    </div>
-  );
-}
-
-function SectionLabel({ children }: { children: string }) {
-  return <div className="section-label">{children}</div>;
-}
+/* ─── Small components ─── */
 
 function StatusBadge({ tone = "green", children }: { tone?: "green" | "orange" | "red" | "blue"; children: string }) {
   return <span className={`status-badge ${tone}`}>{children}</span>;
 }
 
-function IconTile({ icon: Icon, label }: { icon: typeof Play; label: string }) {
+function KvRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="icon-tile">
-      <Icon size={26} />
-      <span>{label}</span>
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="metric">
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <div className="kv-row">
+      <span className="kv-label">{label}</span>
+      <span className="kv-value">{value}</span>
     </div>
   );
 }
@@ -96,35 +57,16 @@ function TimelineStep({
   return (
     <button className={`timeline-step ${active ? "active" : ""}`} onClick={onSelect}>
       <span className="timeline-dot">
-        {active ? <Play size={15} fill="currentColor" /> : <Square size={14} />}
+        {active ? <Play size={14} fill="currentColor" /> : <Square size={12} />}
       </span>
-      <b>{String(index).padStart(2, "0")}</b>
-      <strong>{title}</strong>
-      <small>{time}</small>
+      <span className="timeline-step-index">{String(index).padStart(2, "0")}</span>
+      <span className="timeline-step-title">{title}</span>
+      <span className="timeline-step-time">{time}</span>
     </button>
   );
 }
 
-function CodeBlock() {
-  return (
-    <pre className="code-card">
-      <code>{`import { Replay } from "replay-sdk";
-
-const replay = new Replay({
-  agentId: "meridian",
-  chain: "mantle-sepolia",
-  rpcUrl: process.env.MANTLE_RPC_URL
-});
-
-await replay.record({
-  input,
-  output,
-  toolCalls,
-  txHash
-});`}</code>
-    </pre>
-  );
-}
+/* ─── Main App ─── */
 
 export function App() {
   const [runs, setRuns] = useState<ReplayRun[]>(replayRuns);
@@ -199,344 +141,343 @@ export function App() {
   };
 
   return (
-    <main className="site-shell">
-      <section className="brand-board">
-        <article className="brand-panel identity-panel">
-          <SectionLabel>01. Brand Identity</SectionLabel>
-          <div className="identity-lockup">
-            <Logo />
-            <p>The black box for on-chain AI agents.</p>
+    <main className="devtool-shell">
+      {/* ═══════════════ SIDEBAR ═══════════════ */}
+      <aside className="sidebar">
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <span className="sidebar-logo-icon"><Play size={11} fill="currentColor" /></span>
+            <span className="sidebar-logo-text">REPLAY</span>
           </div>
-          <div className="mini-grid">
-            <div>
-              <Logo />
-              <small>Primary lockup</small>
-            </div>
-            <div>
-              <span className="logo-orbit standalone"><Play size={18} fill="currentColor" /></span>
-              <small>Icon mark</small>
-            </div>
-            <div className="wordmark">REPL<span>A</span>Y</div>
+          <button
+            className={`sidebar-refresh ${loading ? "spinning" : ""}`}
+            onClick={fetchRuns}
+            aria-label="Refresh runs"
+          >
+            <RefreshCw size={14} />
+          </button>
+        </div>
+
+        <div className="sidebar-section-label">Recorded runs</div>
+
+        <ul className="run-list">
+          {runs.map((item, index) => (
+            <li key={`${item.id}-${index}`}>
+              <button
+                className={`run-item ${index === runIndex ? "active" : ""}`}
+                onClick={() => selectRun(index)}
+              >
+                <span className="run-item-dot" />
+                <span className="run-item-info">
+                  <span className="run-item-name">{item.name}</span>
+                  <span className="run-item-meta">{item.agent} · {item.steps.length} steps</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        <div className="sidebar-footer">
+          <Server size={12} />
+          <span>{short(flightRecorderAddress)}</span>
+        </div>
+      </aside>
+
+      {/* ═══════════════ MAIN AREA ═══════════════ */}
+      <section className="main-area">
+        {/* Run header */}
+        <div className="run-header">
+          <div className="run-header-top">
+            <h1>
+              {run.name}
+              <span className="mono-id">{run.id}</span>
+            </h1>
+            <StatusBadge>{verifiedCount === run.steps.length ? "Verified" : `${verifiedCount}/${run.steps.length}`}</StatusBadge>
           </div>
-          <div className="palette">
-            {["#060606", "#ff5a1f", "#f5f1ea", "#20d17d", "#2f82ff", "#ff3838", "#7c3aed"].map((color) => (
-              <span key={color} style={{ background: color }} />
+          <div className="run-stats">
+            <div className="stat-card">
+              <div className="stat-label">Agent</div>
+              <div className="stat-value">{run.agent}</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Network</div>
+              <div className="stat-value">Mantle Sepolia</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Start</div>
+              <div className="stat-value">Jun 8, 14:32</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-label">Steps</div>
+              <div className="stat-value">{run.steps.length}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Timeline */}
+        <div className="timeline-section">
+          <div className="timeline-label">Step timeline</div>
+          <div className="timeline-rail">
+            {timelineSteps.map((item, index) => (
+              <TimelineStep
+                key={`${run.id}-${item.index}`}
+                index={item.index}
+                active={index === stepIndex}
+                title={item.title}
+                time={`14:32:${String(10 + index * 3).padStart(2, "0")}`}
+                onSelect={() => setStepIndex(index)}
+              />
             ))}
           </div>
-          <div className="type-row">
-            <strong>Aa</strong>
-            <span>Space Grotesk</span>
-            <span>Inter</span>
-            <span>JetBrains Mono</span>
-          </div>
-        </article>
+        </div>
 
-        <article className="brand-panel hero-panel">
-          <SectionLabel>02. Landing Page Hero</SectionLabel>
-          <nav className="hero-nav">
-            <Logo />
+        {/* Playback transport */}
+        <div className="playback-bar">
+          <button aria-label="Rewind"><RotateCcw size={15} /></button>
+          <button aria-label="Pause"><Pause size={15} /></button>
+          <button className="playback-play" aria-label="Play"><Play size={18} fill="currentColor" /></button>
+          <button aria-label="Step forward"><ArrowRight size={15} /></button>
+          <span className="playback-time">14:32:18 / 14:34:29</span>
+          <span className="playback-speed">1×</span>
+        </div>
+
+        {/* Selected step card */}
+        <div className="step-summary">
+          <div className="step-card">
             <div>
-              <a>Product</a>
-              <a>Docs</a>
-              <a>Pricing</a>
-              <a>MCP</a>
-              <a>Blog</a>
-            </div>
-            <button onClick={() => handleVerify(false)}>Start Recording</button>
-          </nav>
-          <div className="hero-content">
-            <div className="hero-copy">
-              <h1>
-                Debug the moment your agent went <span>wrong.</span>
-              </h1>
-              <p>
-                REPLAY records every prompt, tool call, decision, and transaction your on-chain AI agent makes, then lets you scrub, verify, and fork the timeline.
-              </p>
-              <div className="hero-bullets">
-                <span><BadgeCheck size={14} /> Record every decision</span>
-                <span><ShieldCheck size={14} /> Verify on Mantle</span>
-                <span><GitFork size={14} /> Time-travel and fork</span>
+              <div className="step-card-title">
+                Step {String(step.index).padStart(2, "0")}: {step.title}
               </div>
-              <div className="hero-actions">
-                <button className="primary-action" onClick={() => handleVerify(false)}>Start Recording</button>
-                <button className="secondary-action" onClick={() => setForkOpen(true)}>View Demo Run</button>
-              </div>
-            </div>
-            <div className="hero-visual">
-              <img src={HERO_IMAGE} alt="REPLAY black box recorder device" />
-              <div className="proof-line">
-                <span />
-                <span />
-                <span />
-                <span />
-              </div>
-            </div>
-          </div>
-          <div className="trust-row">
-            <Metric label="Network" value="Mantle Sepolia" />
-            <Metric label="Partner" value="Tencent Cloud" />
-            <Metric label="Secured" value="KMS" />
-            <Metric label="Storage" value="COS / Local" />
-          </div>
-        </article>
-
-        <article className="brand-panel timeline-panel">
-          <SectionLabel>03. Timeline Viewer</SectionLabel>
-          <div className="app-frame">
-            <aside className="app-sidebar">
-              <Menu size={18} />
-              <Logo />
-              <Home className="active" />
-              <Layers3 />
-              <Hash />
-              <GitFork />
-            </aside>
-            <div className="app-main">
-              <header className="app-top">
-                <span>Runs / {run.id}</span>
-                <StatusBadge>Verified</StatusBadge>
-              </header>
-              <div className="run-switcher">
-                {runs.slice(0, 4).map((item, index) => (
-                  <button key={`${item.id}-${index}`} className={index === runIndex ? "active" : ""} onClick={() => selectRun(index)}>
-                    {item.name}
-                  </button>
+              <div className="step-card-summary">{step.summary}</div>
+              <div className="step-card-payload">
+                {step.payload.map((p, i) => (
+                  <span key={i} className="payload-tag">{p}</span>
                 ))}
               </div>
-              <div className="run-summary">
-                <div>
-                  <strong>Run: {run.id}</strong>
-                  <div className="summary-grid">
-                    <Metric label="Agent" value={run.agent.toUpperCase()} />
-                    <Metric label="Network" value="Mantle Sepolia" />
-                    <Metric label="Start" value="Jun 8, 2026 14:32" />
-                    <Metric label="Steps" value={String(run.steps.length)} />
-                  </div>
-                </div>
-                <button className="outline-button">Share</button>
-              </div>
-              <div className="timeline-rail">
-                {timelineSteps.map((item, index) => (
-                  <TimelineStep
-                    key={`${run.id}-${item.index}`}
-                    index={item.index}
-                    active={index === stepIndex}
-                    title={item.title}
-                    time={`14:32:${10 + index * 3}`}
-                    onSelect={() => setStepIndex(index)}
-                  />
-                ))}
-              </div>
-              <div className="playback">
-                <RotateCcw size={15} />
-                <Pause size={15} />
-                <button><Play size={18} fill="currentColor" /></button>
-                <ArrowRight size={15} />
-                <span>14:32:18 / 14:34:29</span>
-                <b>1x</b>
-              </div>
-              <div className="step-card">
-                <div>
-                  <strong>Step {String(step.index).padStart(2, "0")}: {step.title}</strong>
-                  <p>{step.summary}</p>
-                </div>
-                <StatusBadge>Verified</StatusBadge>
-              </div>
             </div>
+            <StatusBadge tone={step.status === "verified" ? "green" : "red"}>
+              {step.status === "verified" ? "Verified" : "Tampered"}
+            </StatusBadge>
           </div>
-        </article>
+        </div>
+      </section>
 
-        <article className="brand-panel inspector-panel">
-          <SectionLabel>04. Packet Inspector</SectionLabel>
-          <div className="panel-head">
-            <h2>Step {String(step.index).padStart(2, "0")}: {step.title}</h2>
-            <StatusBadge>Verified</StatusBadge>
-          </div>
-          <div className="inspector-grid">
-            <div className="kv-list">
-              <Metric label="Event Type" value={step.kind.toUpperCase()} />
-              <Metric label="Timestamp" value="2026-06-08 14:32:18 UTC" />
-              <Metric label="Agent ID" value={run.agent} />
-              <Metric label="Packet Hash" value={short(step.contentHash)} />
-              <Metric label="Anchor Tx" value={short(step.txHash)} />
-            </div>
-            <div className="accordion-stack">
-              <details open>
-                <summary>Model Input <ChevronDown size={14} /></summary>
-                <pre>{`{
+      {/* ═══════════════ DETAIL PANEL ═══════════════ */}
+      <aside className="detail-panel">
+        {/* Detail header */}
+        <div className="detail-header">
+          <h2>Step {String(step.index).padStart(2, "0")}: {step.title}</h2>
+          <StatusBadge>{step.status === "verified" ? "Verified" : "Tampered"}</StatusBadge>
+        </div>
+
+        {/* Packet fields */}
+        <div className="detail-section">
+          <div className="detail-section-title">Packet data</div>
+          <KvRow label="Event Type" value={step.kind.toUpperCase()} />
+          <KvRow label="Timestamp" value="2026-06-08 14:32:18 UTC" />
+          <KvRow label="Agent ID" value={run.agent} />
+          <KvRow label="Packet Hash" value={short(step.contentHash)} />
+          <KvRow label="Anchor Tx" value={short(step.txHash)} />
+        </div>
+
+        {/* Accordions */}
+        <details className="accordion" open>
+          <summary>
+            Model Input
+            <ChevronDown size={14} className="accordion-chevron" />
+          </summary>
+          <div className="accordion-body">
+            <pre>{`{
   "objective": "maximize risk-adjusted yield",
   "risk_threshold": ${riskThreshold},
   "portfolio": "0x8a1f...d3c2"
 }`}</pre>
-              </details>
-              <details>
-                <summary>Tool Calls (2) <ChevronDown size={14} /></summary>
-                <p>getAPY <StatusBadge>Success</StatusBadge></p>
-                <p>getExposure <StatusBadge>Success</StatusBadge></p>
-              </details>
-              <details>
-                <summary>Memory Snapshot <ChevronDown size={14} /></summary>
-                <p>{step.payload.join(" / ")}</p>
-              </details>
-            </div>
           </div>
-        </article>
+        </details>
 
-        <article className="brand-panel fork-panel">
-          <SectionLabel>05. Fork & Replay</SectionLabel>
-          <div className="fork-head">
-            <strong><span /> Fork from Step {String(step.index).padStart(2, "0")}: {step.title}</strong>
-            <button onClick={() => setForkOpen(true)}>Edit prompt & inputs</button>
+        <details className="accordion">
+          <summary>
+            Tool Calls (2)
+            <ChevronDown size={14} className="accordion-chevron" />
+          </summary>
+          <div className="accordion-body">
+            <p>getAPY <StatusBadge>Success</StatusBadge></p>
+            <p>getExposure <StatusBadge>Success</StatusBadge></p>
           </div>
-          <div className="diff-grid">
-            <div className="diff-card original">
-              <StatusBadge tone="orange">Original Run</StatusBadge>
-              <Metric label="Risk Threshold" value="0.42" />
-              <Metric label="Decision" value="PASS" />
-              <Metric label="Tx Result" value="REBALANCE EXECUTED" />
-              <Metric label="APY Change" value="+12.48%" />
-            </div>
-            <div className="vs">VS</div>
-            <div className={`diff-card forked ${simulatedPass ? "" : "failed"}`}>
-              <StatusBadge tone="blue">Forked Run</StatusBadge>
-              <Metric label="Risk Threshold" value={String(riskThreshold)} />
-              <Metric label="Decision" value={simulatedPass ? "PASS" : "FAIL"} />
-              <Metric label="Tx Result" value={simulatedPass ? "EXECUTED" : "DECLINED"} />
-              <Metric label="Idle Capital" value={`$${walletIdle}`} />
-            </div>
-          </div>
-          <div className="fork-controls">
-            <label>
-              Risk threshold
-              <input type="number" step="0.01" value={riskThreshold} onChange={(e) => setRiskThreshold(Number(e.target.value))} />
-            </label>
-            <label>
-              Wallet idle
-              <input type="number" value={walletIdle} onChange={(e) => setWalletIdle(Number(e.target.value))} />
-            </label>
-            <button className="primary-action" onClick={() => setForkOpen(true)}>Re-run Fork</button>
-          </div>
-        </article>
+        </details>
 
-        <article className="brand-panel verify-panel">
-          <SectionLabel>06. Verification Panel</SectionLabel>
-          <div className={`verify-state ${verifyStatus === "tampered" ? "red" : ""}`}>
+        <details className="accordion">
+          <summary>
+            Memory Snapshot
+            <ChevronDown size={14} className="accordion-chevron" />
+          </summary>
+          <div className="accordion-body">
+            <p>{step.payload.join(" / ")}</p>
+          </div>
+        </details>
+
+        {/* Verification */}
+        <div className="detail-section">
+          <div className="detail-section-title">Verification</div>
+
+          <div className={`verify-banner ${verifyStatus === "tampered" ? "tampered" : ""}`}>
             {verifyStatus === "tampered" ? <AlertTriangle /> : <CheckCircle2 />}
             <div>
-              <h2>{verifyStatus === "tampered" ? "Packet Tampered" : "Packet Verified"}</h2>
+              <h3>{verifyStatus === "tampered" ? "Packet Tampered" : "Packet Verified"}</h3>
               <p>{verifyDetails || "This packet hash matches the on-chain anchor."}</p>
             </div>
           </div>
-          <Metric label="Packet Hash" value={short(step.contentHash)} />
-          <Metric label="Recomputed" value={verifyStatus === "tampered" ? "mismatch" : short(step.contentHash)} />
-          <Metric label="Anchor Tx" value={short(step.txHash)} />
-          <Metric label="Block Number" value="39874291" />
-          <div className="verify-actions">
-            <button onClick={() => handleVerify(false)} disabled={verifying}>
-              <ShieldCheck size={16} /> {verifying && !tamperChecking ? "Verifying..." : "Live Verify"}
-            </button>
-            <button onClick={() => handleVerify(true)} disabled={verifying}>
-              <AlertTriangle size={16} /> {tamperChecking ? "Checking..." : "Run tamper check"}
-            </button>
-          </div>
-          <a href={step.verifyUrl} target="_blank" rel="noreferrer">View on Mantle Explorer <ExternalLink size={14} /></a>
-        </article>
 
-        <article className="brand-panel mobile-panel">
-          <SectionLabel>07. Mobile Preview</SectionLabel>
-          <div className="phone">
-            <div className="phone-screen">
-              <header><Menu size={15} /><Logo /><StatusBadge>Verified</StatusBadge></header>
-              <small>Run<br />{run.id.slice(0, 22)}</small>
-              <div className="phone-timeline">
-                {timelineSteps.slice(0, 5).map((item, index) => (
-                  <span key={item.index} className={index === stepIndex ? "active" : ""}>{String(item.index).padStart(2, "0")}</span>
-                ))}
+          <KvRow label="Packet Hash" value={short(step.contentHash)} />
+          <KvRow label="Recomputed" value={verifyStatus === "tampered" ? "mismatch" : short(step.contentHash)} />
+          <KvRow label="Anchor Tx" value={short(step.txHash)} />
+          <KvRow label="Block Number" value="39874291" />
+        </div>
+
+        <div className="action-row">
+          <button className="action-btn" onClick={() => handleVerify(false)} disabled={verifying}>
+            <ShieldCheck size={14} /> {verifying && !tamperChecking ? "Verifying…" : "Live Verify"}
+          </button>
+          <button className="action-btn" onClick={() => handleVerify(true)} disabled={verifying}>
+            <AlertTriangle size={14} /> {tamperChecking ? "Checking…" : "Run tamper check"}
+          </button>
+        </div>
+
+        <a
+          className="explorer-link"
+          href={step.verifyUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          View on Mantle Explorer <ExternalLink size={12} />
+        </a>
+
+        {/* Fork & Replay */}
+        <div className="detail-section">
+          <div className="detail-section-title">Fork & Replay</div>
+
+          <div className="fork-header">
+            <strong>
+              <span className="fork-dot" />
+              Fork from Step {String(step.index).padStart(2, "0")}
+            </strong>
+            <button className="fork-edit-btn" onClick={() => setForkOpen(true)}>Edit inputs</button>
+          </div>
+
+          <div className="diff-grid">
+            <div className="diff-card">
+              <StatusBadge tone="orange">Original</StatusBadge>
+              <div>
+                <div className="diff-metric-label">Risk Threshold</div>
+                <div className="diff-metric-value">0.42</div>
               </div>
-              <div className="phone-card">
-                <strong>Step {String(step.index).padStart(2, "0")}: {step.title}</strong>
-                <Metric label="Packet Hash" value={short(step.contentHash)} />
-                <Metric label="Status" value="Verified" />
+              <div>
+                <div className="diff-metric-label">Decision</div>
+                <div className="diff-metric-value">PASS</div>
               </div>
-              <button onClick={() => setForkOpen(true)}>Fork from here</button>
-              <button className="dark">Inspect Packet</button>
+              <div>
+                <div className="diff-metric-label">Result</div>
+                <div className="diff-metric-value">EXECUTED</div>
+              </div>
+            </div>
+
+            <div className="diff-vs">VS</div>
+
+            <div className={`diff-card forked ${simulatedPass ? "" : "failed"}`}>
+              <StatusBadge tone="blue">Forked</StatusBadge>
+              <div>
+                <div className="diff-metric-label">Risk Threshold</div>
+                <div className="diff-metric-value">{riskThreshold}</div>
+              </div>
+              <div>
+                <div className="diff-metric-label">Decision</div>
+                <div className="diff-metric-value">{simulatedPass ? "PASS" : "FAIL"}</div>
+              </div>
+              <div>
+                <div className="diff-metric-label">Result</div>
+                <div className="diff-metric-value">{simulatedPass ? "EXECUTED" : "DECLINED"}</div>
+              </div>
             </div>
           </div>
-        </article>
 
-        <article className="brand-panel icon-panel">
-          <SectionLabel>08. Icon Set</SectionLabel>
-          <div className="icon-grid">
-            <IconTile icon={Play} label="App Icon" />
-            <IconTile icon={Box} label="Recorder" />
-            <IconTile icon={Timer} label="Timeline" />
-            <IconTile icon={GitFork} label="Fork" />
-            <IconTile icon={ShieldCheck} label="Verify" />
-            <IconTile icon={Hash} label="Anchor" />
-            <IconTile icon={Zap} label="Run" />
+          <div className="fork-controls">
+            <label>
+              Risk threshold
+              <input
+                type="number"
+                step="0.01"
+                value={riskThreshold}
+                onChange={(e) => setRiskThreshold(Number(e.target.value))}
+              />
+            </label>
+            <label>
+              Wallet idle
+              <input
+                type="number"
+                value={walletIdle}
+                onChange={(e) => setWalletIdle(Number(e.target.value))}
+              />
+            </label>
+            <button
+              className="action-btn primary fork-rerun-btn"
+              onClick={() => setForkOpen(true)}
+            >
+              <GitFork size={14} /> Re-run Fork
+            </button>
           </div>
-        </article>
+        </div>
+      </aside>
 
-        <article className="brand-panel sdk-panel">
-          <SectionLabel>09. SDK Quickstart</SectionLabel>
-          <CodeBlock />
-          <p>That is it. Every decision is recorded and anchored.</p>
-        </article>
-
-        <article className="brand-panel device-panel">
-          <SectionLabel>10. Black Box Device</SectionLabel>
-          <img src={DEVICE_IMAGE} alt="Close-up REPLAY black box recorder" />
-        </article>
-
-        <article className="brand-panel architecture-panel">
-          <SectionLabel>11. Architecture</SectionLabel>
-          <div className="arch-row">
-            <div><Terminal /> Your Agent <b>replay.record()</b></div>
-            <ArrowRight />
-            <div><Code2 /> REPLAY SDK <b>Capture I/O, tools, tx</b></div>
-            <ArrowRight />
-            <div><Database /> Evidence Packet <b>Hash + encrypt</b></div>
-            <ArrowRight />
-            <div><Server /> Storage <b>COS / Local</b></div>
-            <ArrowRight />
-            <div><Network /> On-chain Anchor <b>{short(flightRecorderAddress)}</b></div>
-          </div>
-          <div className="arch-tools">
-            <span><Search /> Scrub</span>
-            <span><Copy /> Inspect</span>
-            <span><ShieldCheck /> Verify</span>
-            <span><GitFork /> Fork</span>
-            <span><Play /> Replay</span>
-          </div>
-        </article>
-      </section>
-
+      {/* ═══════════════ FORK MODAL ═══════════════ */}
       {forkOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <button className="modal-close" onClick={() => setForkOpen(false)}><X size={18} /></button>
-            <SectionLabel>Fork & Replay</SectionLabel>
-            <h2>Change the condition. Watch the decision split.</h2>
-            <div className="fork-controls modal-controls">
+            <button className="modal-close" onClick={() => setForkOpen(false)}><X size={16} /></button>
+            <h2 className="modal-title">Fork & Replay</h2>
+            <p className="modal-subtitle">Change the condition. Watch the decision split.</p>
+
+            <div className="fork-controls">
               <label>
                 Risk threshold
-                <input type="number" step="0.01" value={riskThreshold} onChange={(e) => setRiskThreshold(Number(e.target.value))} />
+                <input
+                  type="number"
+                  step="0.01"
+                  value={riskThreshold}
+                  onChange={(e) => setRiskThreshold(Number(e.target.value))}
+                />
               </label>
               <label>
                 Wallet idle
-                <input type="number" value={walletIdle} onChange={(e) => setWalletIdle(Number(e.target.value))} />
+                <input
+                  type="number"
+                  value={walletIdle}
+                  onChange={(e) => setWalletIdle(Number(e.target.value))}
+                />
               </label>
             </div>
-            <div className="diff-grid">
-              <div className="diff-card original">
+
+            <div className="diff-grid" style={{ marginTop: 20 }}>
+              <div className="diff-card">
                 <StatusBadge tone="orange">Original</StatusBadge>
-                <Metric label="Decision" value="PASS" />
-                <Metric label="Outcome" value="Funds moved" />
+                <div>
+                  <div className="diff-metric-label">Decision</div>
+                  <div className="diff-metric-value">PASS</div>
+                </div>
+                <div>
+                  <div className="diff-metric-label">Outcome</div>
+                  <div className="diff-metric-value">Funds moved</div>
+                </div>
               </div>
               <div className={`diff-card forked ${simulatedPass ? "" : "failed"}`}>
                 <StatusBadge tone={simulatedPass ? "green" : "red"}>Forked</StatusBadge>
-                <Metric label="Decision" value={simulatedPass ? "PASS" : "FAIL"} />
-                <Metric label="Outcome" value={simulatedPass ? "Execute" : "No action"} />
+                <div>
+                  <div className="diff-metric-label">Decision</div>
+                  <div className="diff-metric-value">{simulatedPass ? "PASS" : "FAIL"}</div>
+                </div>
+                <div>
+                  <div className="diff-metric-label">Outcome</div>
+                  <div className="diff-metric-value">{simulatedPass ? "Execute" : "No action"}</div>
+                </div>
               </div>
             </div>
           </div>

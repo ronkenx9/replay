@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -37,12 +37,30 @@ function KvRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+const graphPoints = [
+  { x: 50, y: 50, size: 74 },
+  { x: 62, y: 38, size: 66 },
+  { x: 70, y: 56, size: 70 },
+  { x: 55, y: 72, size: 64 },
+  { x: 34, y: 62, size: 62 },
+  { x: 30, y: 38, size: 58 },
+  { x: 48, y: 24, size: 54 },
+  { x: 78, y: 28, size: 52 },
+];
+
+function nodeTone(kind: string, status: string): "orange" | "green" | "blue" | "red" {
+  if (status === "tampered") return "red";
+  if (kind === "action_taken") return "blue";
+  if (kind === "decision") return "orange";
+  return "green";
+}
+
 export function App() {
   const [runs, setRuns] = useState<ReplayRun[]>(replayRuns);
   const [loading, setLoading] = useState(false);
   const [runIndex, setRunIndex] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<"list" | "detail">("detail");
+  const [viewMode, setViewMode] = useState<"dashboard" | "list" | "detail">("dashboard");
   const [verifying, setVerifying] = useState(false);
   const [tamperChecking, setTamperChecking] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState<VerifyStatus>("idle");
@@ -83,7 +101,15 @@ export function App() {
   const run = runs[runIndex] ?? replayRuns[0]!;
   const step = run.steps[stepIndex] ?? run.steps[0]!;
   const verifiedCount = useMemo(() => run.steps.filter((item) => item.status === "verified").length, [run]);
+  const totalPackets = useMemo(() => runs.reduce((acc, curr) => acc + curr.steps.length, 0), [runs]);
   const simulatedPass = riskThreshold <= 0.48;
+
+  const selectDashboardRun = (index: number) => {
+    setRunIndex(index);
+    setStepIndex(0);
+    setVerifyStatus("idle");
+    setVerifyDetails("");
+  };
 
   const selectRun = (index: number) => {
     setRunIndex(index);
@@ -164,6 +190,12 @@ export function App() {
         </div>
 
         <div className="sb-nav">
+          <button className={`sb-nav-item ${viewMode === "dashboard" ? "active" : ""}`} onClick={() => setViewMode("dashboard")}>
+            <Layers size={16} />
+            <span>Dashboard</span>
+            <span className="sb-nav-count">{totalPackets}</span>
+          </button>
+
           <button className={`sb-nav-item ${viewMode === "list" ? "active" : ""}`} onClick={() => setViewMode("list")}>
             <Activity size={16} />
             <span>All Runs</span>
@@ -178,8 +210,11 @@ export function App() {
           {runs.map((r, idx) => (
             <button
               key={r.id}
-              className={`sb-nav-item ${viewMode === "detail" && runIndex === idx ? "active" : ""}`}
-              onClick={() => selectRun(idx)}
+              className={`sb-nav-item ${viewMode !== "list" && runIndex === idx ? "active" : ""}`}
+              onClick={() => {
+                if (viewMode === "dashboard") selectDashboardRun(idx);
+                else selectRun(idx);
+              }}
               style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px" }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>
@@ -222,7 +257,202 @@ export function App() {
 
       {/* ═══════════════ MAIN AREA ═══════════════ */}
       <main className="main">
-        {viewMode === "list" ? (
+        {viewMode === "dashboard" ? (
+          <>
+            <div className="topbar dashboard-topbar">
+              <div className="topbar-left">
+                <span className="dash-eyebrow">Agent telemetry console</span>
+                <h1>Connect an agent. Watch its timeline become proof.</h1>
+                <p>Graph every packet, inspect every decision, and verify the run against Mantle from one surface.</p>
+              </div>
+              <div className="topbar-actions">
+                <span className="badge green">RPC LIVE</span>
+                <button className="btn-solid" onClick={fetchRuns}>
+                  <RefreshCw size={14} className={loading ? "spinning" : ""} />
+                  Refresh
+                </button>
+                <button className="btn-solid btn-primary" onClick={() => setViewMode("detail")}>
+                  Open timeline <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+
+            <div className="dashboard">
+              <section className="dash-hero-panel">
+                <div>
+                  <div className="dash-kicker">REPLAY / BLACK BOX MODE</div>
+                  <h2>{run.name}</h2>
+                  <p>{run.subtitle}</p>
+                </div>
+                <div className="dash-run-switcher" aria-label="Recorded runs">
+                  {runs.map((r, index) => (
+                    <button
+                      key={r.id}
+                      className={index === runIndex ? "active" : ""}
+                      onClick={() => selectDashboardRun(index)}
+                    >
+                      <span>{r.name}</span>
+                      <b>{r.steps.length} steps</b>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section className="dash-metrics">
+                <div className="dash-metric">
+                  <span>Connected runs</span>
+                  <strong>{runs.length}</strong>
+                </div>
+                <div className="dash-metric">
+                  <span>Evidence packets</span>
+                  <strong>{totalPackets}</strong>
+                </div>
+                <div className="dash-metric">
+                  <span>Selected agent</span>
+                  <strong className="small">{run.agent}</strong>
+                </div>
+                <div className="dash-metric">
+                  <span>Anchor contract</span>
+                  <strong className="small" title={flightRecorderAddress}>{short(flightRecorderAddress)}</strong>
+                </div>
+              </section>
+
+              <section className="dash-grid">
+                <div className="connect-panel">
+                  <div className="panel-head">
+                    <div>
+                      <span className="dash-kicker">Connect</span>
+                      <h3>Agent intake</h3>
+                    </div>
+                    <span className="badge green">READY</span>
+                  </div>
+                  <div className="connect-steps">
+                    <div>
+                      <span>01</span>
+                      <b>Wrap the agent</b>
+                      <p>Use the SDK to record tool calls, decisions, and actions.</p>
+                    </div>
+                    <div>
+                      <span>02</span>
+                      <b>Choose a signer</b>
+                      <p>Local key for fast demos, Tencent KMS for sponsor proof.</p>
+                    </div>
+                    <div>
+                      <span>03</span>
+                      <b>Open the graph</b>
+                      <p>Packets appear as a replayable cluster with live verification.</p>
+                    </div>
+                  </div>
+                  <pre className="connect-code">{`const replay = createReplay({
+  agentId: "${run.agent}",
+  runId: "${run.id}",
+  backend
+});
+
+await replay.record(step);`}</pre>
+                  <div className="connect-actions">
+                    <button onClick={() => setViewMode("detail")}>
+                      <Play size={13} fill="currentColor" />
+                      Scrub run
+                    </button>
+                    <a href="https://github.com/ronkenx9/replay" target="_blank" rel="noreferrer">
+                      GitHub <ExternalLink size={12} />
+                    </a>
+                  </div>
+                </div>
+
+                <div className="graph-panel">
+                  <div className="panel-head">
+                    <div>
+                      <span className="dash-kicker">Packet graph</span>
+                      <h3>Spiral timeline</h3>
+                    </div>
+                    <span className="graph-clock">14:32:{String(10 + stepIndex * 3).padStart(2, "0")} UTC</span>
+                  </div>
+                  <div className="packet-graph" aria-label="Agent packet graph">
+                    <svg className="graph-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                      <path d="M50 50 C64 30 78 50 55 72 C25 72 21 35 48 24 C75 12 88 36 70 56" />
+                      <path d="M30 38 C44 30 62 38 70 56" />
+                    </svg>
+                    <div className="graph-ring ring-a" />
+                    <div className="graph-ring ring-b" />
+                    <div className="graph-ring ring-c" />
+                    {run.steps.map((item, index) => {
+                      const point = graphPoints[index % graphPoints.length]!;
+                      const tone = nodeTone(item.kind, item.status);
+                      return (
+                        <button
+                          key={item.index}
+                          className={`graph-node ${tone} ${index === stepIndex ? "active" : ""}`}
+                          style={{
+                            "--x": `${point.x}%`,
+                            "--y": `${point.y}%`,
+                            "--size": `${point.size}px`,
+                          } as CSSProperties}
+                          onClick={() => {
+                            setStepIndex(index);
+                            setVerifyStatus("idle");
+                            setVerifyDetails("");
+                          }}
+                          aria-label={`Select packet ${item.index}: ${item.title}`}
+                        >
+                          <span>{String(item.index).padStart(2, "0")}</span>
+                          <small>{item.kind.replace("_", " ")}</small>
+                        </button>
+                      );
+                    })}
+                    <div className="graph-legend">
+                      <span><i className="orange" /> decision</span>
+                      <span><i className="green" /> tool call</span>
+                      <span><i className="blue" /> action</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="node-panel">
+                  <div className="panel-head">
+                    <div>
+                      <span className="dash-kicker">Selected packet</span>
+                      <h3>{step.title}</h3>
+                    </div>
+                    <span className={`badge ${step.status === "verified" ? "green" : "red"}`}>{step.status}</span>
+                  </div>
+                  <p className="node-summary">{step.summary}</p>
+                  <div className="node-tags">
+                    {step.payload.map((item) => <span key={item}>{item}</span>)}
+                  </div>
+                  <div className="node-proof">
+                    <KvRow label="Event type" value={step.kind.toUpperCase()} />
+                    <KvRow label="Packet hash" value={short(step.contentHash)} />
+                    <KvRow label="Anchor tx" value={short(step.txHash)} />
+                    <KvRow label="Recomputed" value={verifyStatus === "tampered" ? "mismatch" : short(step.contentHash)} />
+                  </div>
+                  <div className={`verify-banner dashboard-proof ${verifyStatus === "tampered" ? "tampered" : ""}`}>
+                    {verifyStatus === "tampered" ? <AlertTriangle size={22} /> : <ShieldCheck size={22} />}
+                    <div>
+                      <h4>{verifyStatus === "tampered" ? "Packet Tampered" : "Packet Verified"}</h4>
+                      <p>{verifyDetails || "This packet hash matches the on-chain anchor."}</p>
+                    </div>
+                  </div>
+                  <div className="verify-actions dash-verify-actions">
+                    <button onClick={() => handleVerify(false)} disabled={verifying}>
+                      <ShieldCheck size={14} />
+                      {verifying && !tamperChecking ? "Verifying..." : "Live Verify"}
+                    </button>
+                    <button onClick={() => handleVerify(true)} disabled={verifying}>
+                      <AlertTriangle size={14} />
+                      {tamperChecking ? "Checking..." : "Run tamper check"}
+                    </button>
+                  </div>
+                  <button className="fork-rerun" onClick={() => setForkOpen(true)}>
+                    <GitFork size={13} />
+                    Fork this packet
+                  </button>
+                </div>
+              </section>
+            </div>
+          </>
+        ) : viewMode === "list" ? (
           <>
             <div className="topbar">
               <div className="topbar-left">

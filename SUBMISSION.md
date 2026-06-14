@@ -16,11 +16,15 @@ Track: **AI DevTools** (Tencent Cloud).
 | Contract (Mantle Sepolia 5003) | ✅ `0x4d46d3669Ee5EF3298C6E1FD0f92fdd60cc1d062` — Sourcify exact_match |
 | Live viewer | ✅ https://ronkenx9.github.io/replay/ |
 | README + .env.example | ✅ |
-| Demo video | ⬜ owner records (script below) |
+| Demo video | ⬜ owner records (`demo-video.html` is a screen-recordable timed storyboard) |
 | X thread | ⬜ owner posts (draft below) |
 | DoraHacks BUIDL | ⬜ owner registers |
 
 ## Demo video script (~2:30)
+
+Open `demo-video.html` in a browser and screen-record the 16:9 timed storyboard. It uses the
+existing landing assets and includes captions for each beat. Controls are in the lower right
+for pause, previous, and next scene.
 
 **Setup:** public viewer open · explorer tab on FlightRecorder · terminal ready.
 

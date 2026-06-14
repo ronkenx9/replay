@@ -67,7 +67,7 @@ describe("Tencent KMS signer", () => {
     expect([27, 28]).toContain(v);
   });
 
-  it("calls Tencent Cloud KMS with the expected AsymmetricSign payload", async () => {
+  it("calls Tencent Cloud KMS with the expected SignByAsymmetricKey payload", async () => {
     const backingAccount = privateKeyToAccount(generatePrivateKey());
     const message = "sign via kms api";
     const signature = await backingAccount.signMessage({ message });
@@ -92,13 +92,14 @@ describe("Tencent KMS signer", () => {
     const body = JSON.parse(call?.[1]?.body as string) as Record<string, string>;
 
     expect(signer.mode).toBe("tencent-kms");
-    expect(call?.[0]).toBe("https://kms.tencentcloudapi.com");
+    expect(call?.[0]).toBe("https://kms.intl.tencentcloudapi.com");
     expect(body).toMatchObject({
       KeyId: "kms-key",
       Algorithm: "ECC_SECP256K1",
-      Message: hashMessage(message).slice(2),
-      MessageType: "RAW",
+      Message: Buffer.from(hashMessage(message).slice(2), "hex").toString("base64"),
+      MessageType: "DIGEST",
     });
+    expect(call?.[1]?.headers).toMatchObject({ "X-TC-Action": "SignByAsymmetricKey" });
     expect(recovered.toLowerCase()).toBe(backingAccount.address.toLowerCase());
   });
 });

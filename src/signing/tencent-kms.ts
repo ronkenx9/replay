@@ -18,6 +18,8 @@ export interface TencentKmsConfig {
   secretId?: string;
   secretKey?: string;
   mockAddress?: Address;
+  endpointHost?: string;
+  algorithm?: string;
 }
 
 export interface TencentKmsAccount {
@@ -112,20 +114,27 @@ export function createTencentKmsAccount(config: TencentKmsConfig): TencentKmsAcc
 }
 
 async function signHashWithKms(hash: Hex, expectedAddress: Address, config: TencentKmsConfig): Promise<Signature> {
-  const { keyId, region = "ap-guangzhou", secretId, secretKey } = config;
+  const {
+    keyId,
+    region = "ap-guangzhou",
+    secretId,
+    secretKey,
+    endpointHost = "kms.intl.tencentcloudapi.com",
+    algorithm = "ECC_SECP256K1",
+  } = config;
   if (!keyId || !secretId || !secretKey) throw new Error("Tencent KMS credentials are incomplete.");
 
-  const action = "AsymmetricSign";
+  const action = "SignByAsymmetricKey";
   const service = "kms";
   const version = "2019-01-18";
-  const host = `${service}.tencentcloudapi.com`;
+  const host = endpointHost;
   const timestamp = Math.floor(Date.now() / 1000);
   const date = new Date(timestamp * 1000).toISOString().split("T")[0]!;
   const payload = JSON.stringify({
     KeyId: keyId,
-    Algorithm: "ECC_SECP256K1",
-    Message: hash.slice(2),
-    MessageType: "RAW",
+    Algorithm: algorithm,
+    Message: Buffer.from(hash.slice(2), "hex").toString("base64"),
+    MessageType: "DIGEST",
   });
 
   const headers = buildTencentCloudHeaders({

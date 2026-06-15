@@ -1,0 +1,14 @@
+{
+  "redirects": [
+    {
+      "source": "/replay",
+      "destination": "https://ronkenx9.github.io/replay/",
+      "permanent": false
+    },
+    {
+      "source": "/replay/",
+      "destination": "https://ronkenx9.github.io/replay/",
+      "permanent": false
+    }
+  ]
+}
